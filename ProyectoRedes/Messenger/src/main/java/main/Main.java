@@ -1,10 +1,15 @@
 package main;
 
+import router.RouterController;
+
 public class Main {
 
 	public static void main(String[] args) {
-		Test test = new Test();
-		System.out.println(test.sayHello());;
+		
+		RouterController router = new RouterController();
+		
+		router.startRouter();
+
 	}
 
 }
