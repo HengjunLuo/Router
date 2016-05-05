@@ -26,11 +26,6 @@ public final class NetworkController implements Runnable{
 	
 	public NetworkController(int port, int nThreads) {
 		// Trying to get local IP
-		LocalIPAddress = Utils.getIPV4Address(interfaceName);
-		if (LocalIPAddress == null) {
-			Utils.printError(1, "Could not get the local IP.", TAG);
-			System.exit(0);
-		}
 		
 		this.serverPort = port;
 		this.threadPool = Executors.newFixedThreadPool(nThreads);
