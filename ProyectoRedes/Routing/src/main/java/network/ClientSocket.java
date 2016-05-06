@@ -9,6 +9,7 @@ import java.net.UnknownHostException;
 import java.util.LinkedList;
 import java.util.Queue;
 
+import router.RouterController;
 import main.Utils;
 
 public class ClientSocket implements Runnable{
@@ -22,7 +23,7 @@ public class ClientSocket implements Runnable{
     private DataInputStream input = null;
     private boolean isStopped = false;
     
-    static String TAG = "CLIENT SOCKET";
+    private String TAG = "CLIENT SOCKET";
     
     
     public ClientSocket(String address, int port, String hostname) {
@@ -41,6 +42,32 @@ public class ClientSocket implements Runnable{
         } catch (IOException e) {
         	Utils.printError(1, "Couldn't get I/O for the connection to " + hostname, TAG);
         }
+        
+        // Start connection
+        requestConnection();
+    }
+    
+    private boolean requestConnection() {
+    	String request = "From:" + RouterController.hostname + "\n" + "Type:HELLO";
+    	String response;
+    	try {
+			output.writeBytes(request);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+    	try {
+			response = input.readLine();
+			System.out.println(response);
+			response = input.readLine();
+			System.out.println(response);
+			response = input.readLine();
+			System.out.println(response);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	
+    	return true;
     }
 
 	public void run() {

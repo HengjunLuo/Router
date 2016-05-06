@@ -1,10 +1,13 @@
 package router;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Queue;
 
 import main.Utils;
+import network.ClientSocket;
 import network.NetworkController;
 import network.Packet;
 
@@ -16,6 +19,7 @@ public class RouterController {
 	public static final String KEEP_ALIVE = "KeepAlive";
 	public static final String DV = "DV";
 	public static final String hostname = "Cesar";
+	private String TAG = "ROUTER CONTROLLER";
 
 	NetworkController server;
 	Thread threadServer;
@@ -34,10 +38,40 @@ public class RouterController {
 	}
 	
 	private void setupInitialState() {
-//		File file = new File("src/files/config.txt");
-//		ArrayList<String> content = Utils.readFile(file);
-//		System.out.println(content.toString());
-		// TODO: Implement initial configurations
+		// LOAD CONFIGURATION FILE
+		File configFile = new File("..\\Routing\\src\\main\\resources\\config.txt");
+		if (!configFile.exists()) {
+			System.err.println("Unable to load configuration file.");
+			System.exit(0);			
+		}
+		ArrayList<String> content = Utils.readFile(configFile);
+		
+		// CREATE CONNECTION TO HOSTS
+		String address, hostname, cost;
+		String[] splitted;
+		int aux = 0;
+		ClientSocket clientSocket;
+		for (String line: content) {
+			// Validate syntax
+			splitted = line.split(" ");
+			if (splitted.length != 3) {
+				Utils.printError(2, "Syntax error in config file. Skipping definition at line " + aux, TAG);
+				continue;
+			}
+			address = splitted[0];
+			hostname = splitted[1];
+			cost = splitted[2];
+			if (!Utils.validate(address) || hostname.equals("") || !cost.matches("[0-9]+")) {
+				Utils.printError(2, "Syntax error in config file. Skipping definition at line " + aux, TAG);
+				continue;
+			}
+			
+			// Create connection
+			clientSocket = new ClientSocket(address, PORT, hostname);
+			new Thread(clientSocket).start();
+
+			aux++;
+		}
 	}
 	
 	public void startRouter() {

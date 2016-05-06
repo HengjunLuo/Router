@@ -54,6 +54,7 @@ public class ServerRunnable implements Runnable {
 			if (data == null) {
 				output.println("Handshaking error! Connection clossed.");
 				output.flush();
+				closeConnection();
 				
 				return;
 			}
@@ -180,10 +181,6 @@ public class ServerRunnable implements Runnable {
 	public String login() throws IOException {
 		String request, hostname;
 		String[] splitted;
-		
-		// Welcome message
-		output.println("Hello! Login please.");
-		output.flush();
 		
 		// First line
 		request = input.readLine();

@@ -25,8 +25,7 @@ public final class NetworkController implements Runnable{
 	static String LocalIPAddress = null;
 	
 	public NetworkController(int port, int nThreads) {
-		// Trying to get local IP
-		
+
 		this.serverPort = port;
 		this.threadPool = Executors.newFixedThreadPool(nThreads);
 		
