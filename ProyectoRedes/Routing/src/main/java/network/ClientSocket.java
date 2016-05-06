@@ -48,16 +48,17 @@ public class ClientSocket implements Runnable{
     }
     
     private boolean requestConnection() {
-    	String request = "From:" + RouterController.hostname + "\n" + "Type:HELLO";
+    	String request = "From:" + RouterController.hostname + "\n" + "Type:HELLO\n";
     	String response;
+    	
+    	// Sending request message
     	try {
 			output.writeBytes(request);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+    	// Reading WELCOME message
     	try {
-			response = input.readLine();
-			System.out.println(response);
 			response = input.readLine();
 			System.out.println(response);
 			response = input.readLine();
