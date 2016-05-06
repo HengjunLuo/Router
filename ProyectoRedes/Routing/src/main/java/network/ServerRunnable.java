@@ -180,12 +180,12 @@ public class ServerRunnable implements Runnable {
 	 */
 	public String login() throws IOException {
 		System.out.println("Login process...");
-		String request;
+		String request, hostname;
 		String[] splitted;
 		
 		// First line
 		request = input.readLine();
-		System.out.println("\nFirst line: \n" + request);
+//		System.out.println("\nFirst line: \n" + request);
 		splitted = request.split(":");
 		
 		if (splitted.length != 2) {
@@ -194,11 +194,11 @@ public class ServerRunnable implements Runnable {
 		if (!splitted[0].trim().equals("From")) {
 			return null;
 		}
-		this.hostname = splitted[1].trim();
+		hostname = splitted[1].trim();
 
 		// Second line
 		request = input.readLine();
-		System.out.println("\nSecond line: \n" + request);
+//		System.out.println("\nSecond line: \n" + request);
 		
 		splitted = request.split(":");
 		
