@@ -18,7 +18,7 @@ public class RouterController {
 	public static final int INFINITY = 999;
 	public static final String KEEP_ALIVE = "KeepAlive";
 	public static final String DV = "DV";
-	public static final String hostname = "Cesar";
+	public static String hostname;
 	private String TAG = "ROUTER CONTROLLER";
 
 	NetworkController server;
@@ -28,6 +28,13 @@ public class RouterController {
 	private static Queue<Packet> events;
 	
 	public RouterController() {
+		File myNameFile = new File("..\\Routing\\src\\main\\resources\\myname.txt");
+		if (!myNameFile.exists()) {
+			Utils.printError(1, "Text file with host name doesn't exist.", TAG);
+			System.exit(0);
+		}
+		hostname = Utils.readFile(myNameFile).get(0).trim();
+		
 		setupInitialState();
 		
 		server = new NetworkController(PORT, NUM_THREADS);
