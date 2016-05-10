@@ -135,6 +135,7 @@ public class RouterController {
 					currentCost = dvtable.get(packet.from).get(source).cost;
 					newCost = dvtable.get(packet.from).get(packet.from).cost + packet.costs.get(source);
 					if (newCost < currentCost) {
+						System.out.println("Cambiando costo a " + source + ", de " + currentCost + " a " + newCost);
 						dvtable.get(packet.from).get(source).cost = newCost;
 					}
 				}
