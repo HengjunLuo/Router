@@ -157,6 +157,7 @@ public class RouterController {
 
 
 	private void printDTable() {
+		System.out.println("-------- DISTANCE TABLE --------");
 		for (Map<String, Node> cols: dvtable.values()) {
 			for (Node node: cols.values()) {
 				System.out.print(node.toString());
