@@ -113,7 +113,7 @@ public final class NetworkController implements Runnable{
 	 * @param data
 	 */
 	public static synchronized void receivePacket(Packet packet) {
-//		System.out.println(packet.toString());
+		System.out.println(packet.toString());
 		RouterController.receiveData(packet);
 	}
 	
