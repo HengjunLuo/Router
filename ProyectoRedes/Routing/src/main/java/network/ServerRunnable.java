@@ -37,6 +37,7 @@ public class ServerRunnable implements Runnable {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
 	}
 	
 	public void run() {
@@ -44,17 +45,22 @@ public class ServerRunnable implements Runnable {
 		String[] splitted;
 		Map<String, Integer> costs;
 		int len, cost;
-		boolean firstLineReaded = false;
 		
 		System.out.println("Attending user requests:");
 
 		try {
-			// Handshaking
-			data = login();
-			if (data == null) {
-				output.println("Handshaking error! Connection clossed.");
-				output.flush();
+			// ********* Handshaking *********
+			this.hostname = login();
+			if (this.hostname == null) {
+				Utils.printError(2, "Handshaking error! Connection clossed.", TAG);
 				closeConnection();
+				
+				return;
+			}
+			
+			if (NetworkController.existInputConnection(this.hostname)) {
+				Utils.printError(2, "Trying to duplicate connection. A listener for " +
+						this.hostname + " already exist.", TAG);
 				
 				return;
 			}
@@ -66,23 +72,20 @@ public class ServerRunnable implements Runnable {
 			);
 			output.flush();
 			
-			this.hostname = data;
+			NetworkController.inputConnections.put(this.hostname, this);
 			System.out.println("Connection with " + this.hostname + " stablished");
 			
-			// Create a new output connection for this user
-			ClientSocket sender = new ClientSocket(this.address, RouterController.PORT, this.hostname);
-			new Thread(sender).start();
+			// Create a new output connection for this user if doesn't exist
+			if (!NetworkController.existOutputConnection(this.hostname)) {
+				ClientSocket sender = new ClientSocket(this.address, RouterController.PORT, this.hostname);
+				NetworkController.outputConnections.put(this.hostname, sender);
+				new Thread(sender).start();
+			}
 			
-			// Add listener and sender for this user to the controller class
-			NetworkController.addNodeConnection(this, sender);
-			
-			// Start to listening
+
+			// ********* Listening *********
 			while (true) {
-				
-				// First line
-				if (!firstLineReaded) {
-					data = input.readLine();
-				}
+				data = input.readLine();
 				splitted = data.split(":");
 
 				if (splitted.length != 2) {
@@ -120,17 +123,17 @@ public class ServerRunnable implements Runnable {
 					splitted = data.split(":");
 					
 					if (splitted.length != 2) {
-						Utils.printError(2, "Syntax error at line 3 from " + hostname, TAG);
+						Utils.printError(2, "Syntax error at line 3 from " + this.hostname, TAG);
 						continue;
 					}
 					if (!splitted[0].trim().equals("Len")) {
-						Utils.printError(2, "Syntax error at line 3 from " + hostname, TAG);
+						Utils.printError(2, "Syntax error at line 3 from " + this.hostname, TAG);
 						continue;
 					}
 					try {
 						len = Integer.parseInt(data.split(":")[1]);
 					} catch (NumberFormatException e) {
-						Utils.printError(2, "Source : " + hostname + e.getMessage(), TAG);
+						Utils.printError(2, "Number format exception. Data recevide from " + this.hostname, TAG);
 						continue;
 					}
 
@@ -141,14 +144,14 @@ public class ServerRunnable implements Runnable {
 						splitted = data.split(":");
 
 						if (splitted.length != 2) {
-							Utils.printError(2, "Syntax error at line " + (4 + i)+  " from " + hostname, TAG);
+							Utils.printError(2, "Syntax error at line " + (4 + i)+  " from " + this.hostname, TAG);
 							continue;
 						}
 						
 						try {
 							cost = Integer.parseInt(splitted[1].trim());
 						} catch (NumberFormatException e) {
-							Utils.printError(2, "Source : " + hostname + e.getMessage(), TAG);
+							Utils.printError(2, "Number format exception. Data recevide from " + this.hostname, TAG);
 							continue;
 						}
 						
@@ -185,7 +188,6 @@ public class ServerRunnable implements Runnable {
 		
 		// First line
 		request = input.readLine();
-//		System.out.println("\nFirst line: \n" + request);
 		splitted = request.split(":");
 		
 		if (splitted.length != 2) {
@@ -198,8 +200,6 @@ public class ServerRunnable implements Runnable {
 
 		// Second line
 		request = input.readLine();
-//		System.out.println("\nSecond line: \n" + request);
-		
 		splitted = request.split(":");
 		
 		if (splitted.length != 2) {

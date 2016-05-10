@@ -43,36 +43,47 @@ public class ClientSocket implements Runnable{
         	Utils.printError(1, "Couldn't get I/O for the connection to " + hostname, TAG);
         }
         
-        // Start connection
-        requestConnection();
+        // Add new connection
+        NetworkController.outputConnections.put(this.hostname, this);
     }
     
-    private boolean requestConnection() {
+	private boolean requestConnection() {
     	String request = "From:" + RouterController.hostname + "\n" + "Type:HELLO\n";
-    	String response;
+    	String response1="", response2="";
     	
     	// Sending request message
     	try {
 			output.writeBytes(request);
 		} catch (IOException e) {
 			e.printStackTrace();
+			closeConnection();
 		}
     	// Reading WELCOME message
     	try {
-			response = input.readLine();
-			System.out.println(response);
-			response = input.readLine();
-			System.out.println(response);
+			response1 = input.readLine();
+			response2 = input.readLine();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			Utils.printError(1, e.getMessage(), TAG);
 		}
+    	if (response1.trim().equals("From:" + this.hostname) && response2.trim().equals("Type:HELLO")) {
+    		System.out.println("Output connection stablished with " + this.hostname);    		
+    		
+    		return true;
+    	}
     	
-    	return true;
+    	return false;
     }
 
 	public void run() {
-		System.out.println("Enter to run method.");
+        // Login process: if FALSE, brook connection
+        if (!requestConnection()) {
+        	NetworkController.outputConnections.remove(this.hostname);
+        	this.closeConnection();
+        	return;
+        }
+
+        // If logged successfully, start to sending data
 		while (!isStopped) {
 			// If the queue is empty, continue.
 			if (dataQueue.isEmpty()) {
@@ -108,7 +119,7 @@ public class ClientSocket implements Runnable{
 			// Set flag to stopped
 			isStopped = true;
 		} catch (IOException e) {
-			Utils.printError(1, "Clossing client connection in node " + this.hostname, TAG);
+			Utils.printError(1, "Clossing connection whit " + this.hostname, TAG);
 			e.printStackTrace();
 		}
 	}

@@ -113,8 +113,15 @@ public final class NetworkController implements Runnable{
 	 * @param data
 	 */
 	public static synchronized void receivePacket(Packet packet) {
-		System.out.println(packet.toString());
-//		RouterController.receiveData(packet);
+//		System.out.println(packet.toString());
+		RouterController.receiveData(packet);
 	}
 	
+	public static synchronized boolean existOutputConnection(String host) {
+		return outputConnections.containsKey(host);
+	}
+
+	public static synchronized boolean existInputConnection(String host) {
+		return inputConnections.containsKey(host);
+	}
 }

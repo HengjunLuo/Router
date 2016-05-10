@@ -29,16 +29,6 @@ public class RouterNode {
 
         sendVectors();
     }
-    
-    private void printDT() {
-    	System.out.println("****************** Router #" + myID + " - Distance Table ******************");
-        for(int i = 0; i < RouterSimulator.NUM_NODES; i++) {
-            for(int j = 0; j < RouterSimulator.NUM_NODES; j++) {
-            	System.out.print(neighbourVectors[i][j] + " - ");
-            }
-            System.out.println("");
-        }
-    }
 
     //--------------------------------------------------
     private void sendVectors() {
@@ -86,6 +76,12 @@ public class RouterNode {
         return dirty; 
     }
 
+
+    //--------------------------------------------------
+    private void sendUpdate(RouterPacket pkt) {
+        sim.toLayer2(pkt);
+    }
+    
     //--------------------------------------------------
     public void recvUpdate(RouterPacket pkt) {
         System.arraycopy(pkt.mincost, 0, neighbourVectors[pkt.sourceid], 0, RouterSimulator.NUM_NODES);
@@ -96,12 +92,15 @@ public class RouterNode {
         }
     }
 
-
     //--------------------------------------------------
-    private void sendUpdate(RouterPacket pkt) {
-        sim.toLayer2(pkt);
-    }
+    public void updateLinkCost(int dest, int newcost) {
+        neighbourVectors[myID][dest] = newcost;
 
+        boolean dirty = recalculateCost();
+        if(dirty) {
+            sendVectors();
+        }
+    }
 
     //--------------------------------------------------
     public void printDistanceTable() {
@@ -164,15 +163,5 @@ public class RouterNode {
         myGUI.print("\n");
  
     }
-
-    //--------------------------------------------------
-    public void updateLinkCost(int dest, int newcost) {
-        neighbourVectors[myID][dest] = newcost;
-
-        boolean dirty = recalculateCost();
-        if(dirty) {
-            sendVectors();
-        }
-    }
-
+    
 }

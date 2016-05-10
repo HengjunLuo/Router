@@ -3,8 +3,13 @@ package router;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.Time;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Queue;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import main.Utils;
 import network.ClientSocket;
@@ -26,6 +31,9 @@ public class RouterController {
 	String setupFileName = "config.txt";
 	
 	private static Queue<Packet> events;
+	private Map<String, Map<String, Node>> dvtable;
+	private Map<String, Node> nodes;
+
 	
 	public RouterController() {
 		File myNameFile = new File("..\\Routing\\src\\main\\resources\\myname.txt");
@@ -35,12 +43,14 @@ public class RouterController {
 		}
 		hostname = Utils.readFile(myNameFile).get(0).trim();
 		
-		setupInitialState();
-		
 		server = new NetworkController(PORT, NUM_THREADS);
 		threadServer = new Thread(server);
 		threadServer.start();
 		
+		dvtable = new HashMap<String, Map<String, Node>>();
+		nodes = new HashMap<String, Node>();
+		
+		setupInitialState();
 		startRouter();
 	}
 	
@@ -58,6 +68,8 @@ public class RouterController {
 		String[] splitted;
 		int aux = 0;
 		ClientSocket clientSocket;
+		Node node;
+		
 		for (String line: content) {
 			// Validate syntax
 			splitted = line.split(" ");
@@ -73,26 +85,82 @@ public class RouterController {
 				continue;
 			}
 			
-			// Create connection
-			clientSocket = new ClientSocket(address, PORT, hostname);
-			new Thread(clientSocket).start();
-
+			// Create connection if doesn't exist one yet
+			if (!NetworkController.existOutputConnection(hostname)) {
+				clientSocket = new ClientSocket(address, PORT, hostname);
+				new Thread(clientSocket).start();
+			} else {
+				Utils.printError(2, "Trying to duplicate connection. A connection with " +
+						hostname + " already exist.", TAG);
+			}
+			
+			// Add new node
+			nodes.put(hostname, new Node(hostname, Integer.parseInt(cost), address));
 			aux++;
 		}
+		
+		// Build initial DV Table
+		for (Node node1: nodes.values()) {
+			dvtable.put(node1.getId(), new HashMap<String, Node>());
+			for (Node node2: nodes.values()) {
+				aux = (node2.getId().equals(node2.getId())) ? node2.getCost() : INFINITY;
+				dvtable.get(node1.getId()).put(node2.getId(), new Node(node2.getId(), aux, node2.getAddress()));
+			}
+		}
+		this.printDTable();
 	}
 	
 	public void startRouter() {
-		// TODO: Implement router listener here
+		// Send DV to all neighbors
+		String data = "From:" + hostname + "\nType:DV\nLen:" + nodes.size() + "\n";
+		for (Node node: nodes.values()) {
+			data += node.getId() + ":" + node.getCost() + "\n";
+		}
+		for (Node node: nodes.values()) {
+			NetworkController.sendData(node.getId(), data);
+		}
+		
+		Packet packet;
+		int currentCost, newCost;
+		Timer timer = new Timer(); 
+		
 		while (true) {
-//			if (events.isEmpty()) {
-//				continue;
-//			}
+			if (events.isEmpty()) {
+				continue;
+			}
 			
+			packet = events.poll();
+			if (packet.type.equals(RouterController.DV)) {
+				for (String source: packet.costs.keySet()) {
+					currentCost = dvtable.get(packet.from).get(source).cost;
+					newCost = dvtable.get(packet.from).get(packet.from).cost + packet.costs.get(source);
+					if (newCost < currentCost) {
+						dvtable.get(packet.from).get(source).cost = newCost;
+					}
+				}
+			}
 			
+			timer.scheduleAtFixedRate(timerTask, 0, 1000);
 		}
 	}
 	
 	public static synchronized void receiveData(Packet packet) {
-//		events.add(packet);
+		events.add(packet);
+	}
+
+	TimerTask timerTask = new TimerTask() {
+        public void run() {
+        	printDTable();
+        } 
+    }; 
+
+
+	private void printDTable() {
+		for (Map<String, Node> cols: dvtable.values()) {
+			for (Node node: cols.values()) {
+				System.out.print(node.toString());
+			}
+			System.out.println();
+		}
 	}
 }
