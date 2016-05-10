@@ -131,6 +131,7 @@ public class RouterController {
 			
 			packet = events.poll();
 			if (packet.type.equals(RouterController.DV)) {
+				System.out.println("Interpretando paquete tipo DV...");
 				for (String source: packet.costs.keySet()) {
 					currentCost = dvtable.get(packet.from).get(source).cost;
 					newCost = dvtable.get(packet.from).get(packet.from).cost + packet.costs.get(source);
