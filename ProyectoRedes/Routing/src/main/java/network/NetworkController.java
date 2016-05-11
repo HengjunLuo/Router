@@ -92,16 +92,11 @@ public final class NetworkController implements Runnable{
 		}
 	}
 	
-	public static synchronized void addNodeConnection(ServerRunnable listener, ClientSocket sender) {
-		inputConnections.put(listener.getHost(), listener);
-		outputConnections.put(sender.getHost(), sender);
-	}
-	
 	public static synchronized void sendData(String host, String data) {
 		if (outputConnections.containsKey(host)) {
 			outputConnections.get(host).addData(data);
 		} else {
-			Utils.printError(2, "Trying to send data to a NULL node.", TAG);
+			Utils.printError(2, "Trying to send data to a disconnected node: '" + host + "'", TAG);
 		}
 	}
 	

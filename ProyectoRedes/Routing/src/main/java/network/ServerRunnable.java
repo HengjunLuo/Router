@@ -74,13 +74,12 @@ public class ServerRunnable implements Runnable {
 			output.flush();
 			
 			NetworkController.inputConnections.put(this.hostname, this);
-			System.out.println("Connection with '" + this.hostname + "' stablished.");
+			System.out.println("Input connection with '" + this.hostname + "' stablished.");
 			
 			// Create a new output connection for this user if doesn't exist
 			if (!NetworkController.existOutputConnection(this.hostname)) {
-				System.out.println("There is no an output connection to '" + this.hostname + "'. Proceeding to create one.");
+				System.out.println("ServerRunnable: There is no an output connection to '" + this.hostname + "'. Proceeding to create one.");
 				ClientSocket sender = new ClientSocket(this.address, RouterController.PORT, this.hostname);
-				NetworkController.outputConnections.put(this.hostname, sender);
 				new Thread(sender).start();
 			}
 			

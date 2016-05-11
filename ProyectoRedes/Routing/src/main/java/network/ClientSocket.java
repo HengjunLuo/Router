@@ -35,6 +35,7 @@ public class ClientSocket implements Runnable{
     	// Instantiate connection socket and output/input stream
         try {
         	clientSocket = new Socket(this.address, port);
+        	while (clientSocket == null) {}
             output = new DataOutputStream(clientSocket.getOutputStream());
             input = new DataInputStream(clientSocket.getInputStream());
         } catch (UnknownHostException e) {
@@ -44,22 +45,27 @@ public class ClientSocket implements Runnable{
         }
         
         // Add new connection
+        System.out.println("Client socket openned for '" + this.hostname + "'");
         NetworkController.outputConnections.put(this.hostname, this);
     }
     
-	private boolean requestConnection() {
+	private boolean login() {
+		System.out.println("Client login proccess with '" + this.hostname + "'...");
     	String request = "From:" + RouterController.hostname + "\n" + "Type:HELLO\n";
     	String response1="", response2="";
     	
     	// Sending request message
     	try {
+    		System.out.println("Sending HELLO to '" + this.hostname + "'...");
 			output.writeBytes(request);
 		} catch (IOException e) {
 			e.printStackTrace();
 			closeConnection();
 		}
+
     	// Reading WELCOME message
     	try {
+    		System.out.println("Trying to read WELCOME from '" + this.hostname + "'...");
 			response1 = input.readLine();
 			response2 = input.readLine();
 		} catch (IOException e) {
@@ -67,7 +73,7 @@ public class ClientSocket implements Runnable{
 			Utils.printError(1, e.getMessage(), TAG);
 		}
     	if (response1.trim().equals("From:" + this.hostname) && response2.trim().equals("Type:HELLO")) {
-    		System.out.println("Output connection stablished with " + this.hostname);    		
+    		System.out.println("Output connection stablished with '" + this.hostname + "'.");    		
     		
     		return true;
     	}
@@ -77,10 +83,10 @@ public class ClientSocket implements Runnable{
 
 	public void run() {
         // Login process: if FALSE, brook connection
-        if (!requestConnection()) {
+        if (!login()) {
+        	System.out.println("Output connection with '" + this.hostname + "' failed.");
         	NetworkController.outputConnections.remove(this.hostname);
         	this.closeConnection();
-        	return;
         }
 
         // If logged successfully, start to sending data
@@ -119,7 +125,7 @@ public class ClientSocket implements Runnable{
 			// Set flag to stopped
 			isStopped = true;
 		} catch (IOException e) {
-			Utils.printError(1, "Clossing connection whit " + this.hostname, TAG);
+			Utils.printError(1, "Clossing connection with '" + this.hostname + "'.", TAG);
 			e.printStackTrace();
 		}
 	}

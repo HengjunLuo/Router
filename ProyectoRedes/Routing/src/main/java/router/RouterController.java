@@ -88,7 +88,7 @@ public class RouterController {
 			
 			// Create connection if doesn't exist one yet
 			if (!NetworkController.existOutputConnection(hostname)) {
-				System.out.println("There is no an output connection to '" + hostname + "'. Trying to get one.");
+				System.out.println("RouterController: There is no an output connection to '" + hostname + "'. Trying to get one.");
 				clientSocket = new ClientSocket(address, PORT, hostname);
 				new Thread(clientSocket).start();
 			} else {
