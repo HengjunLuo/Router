@@ -66,6 +66,7 @@ public class ServerRunnable implements Runnable {
 			}
 			
 			// Handshaking successful
+			System.out.println("Returning WELCOME message to '" + this.hostname + "'");
 			output.println(
 				"From:" + RouterController.hostname + "\n" + 
 				"Type:WELCOME"
@@ -73,10 +74,11 @@ public class ServerRunnable implements Runnable {
 			output.flush();
 			
 			NetworkController.inputConnections.put(this.hostname, this);
-			System.out.println("Connection with " + this.hostname + " stablished");
+			System.out.println("Connection with '" + this.hostname + "' stablished.");
 			
 			// Create a new output connection for this user if doesn't exist
 			if (!NetworkController.existOutputConnection(this.hostname)) {
+				System.out.println("There is no an output connection to '" + this.hostname + "'. Proceeding to create one.");
 				ClientSocket sender = new ClientSocket(this.address, RouterController.PORT, this.hostname);
 				NetworkController.outputConnections.put(this.hostname, sender);
 				new Thread(sender).start();
@@ -84,6 +86,7 @@ public class ServerRunnable implements Runnable {
 			
 
 			// ********* Listening *********
+			System.out.println("Starting connection listener for '" + this.hostname + "'...");
 			while (true) {
 				data = input.readLine();
 				splitted = data.split(":");
@@ -113,6 +116,7 @@ public class ServerRunnable implements Runnable {
 				
 				// Matching a KeepAlive packet
 				if (type.equals(RouterController.KEEP_ALIVE)) {
+					System.out.println("New KEEP_ALIVE packet from '" + this.hostname + "'");
 					NetworkController.receivePacket(
 							new Packet(from, type)
 					);
@@ -158,6 +162,7 @@ public class ServerRunnable implements Runnable {
 						costs.put(splitted[0].trim(), cost);
 					}
 					
+					System.out.println("New DV packet from '" + this.hostname + "'");
 					NetworkController.receivePacket(
 							new Packet(from, RouterController.DV, len, costs)
 					);
@@ -209,6 +214,7 @@ public class ServerRunnable implements Runnable {
 			return null;
 		}
 		
+		System.out.println("Login process with '" + hostname + "' successfully completed.");
 		// Logged successfully -> return host received
 		return hostname;
 	}

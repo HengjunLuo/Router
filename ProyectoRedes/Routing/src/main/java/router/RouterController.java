@@ -55,6 +55,7 @@ public class RouterController {
 	}
 	
 	private void setupInitialState() {
+		System.out.println("Setting router initial state...");
 		// LOAD CONFIGURATION FILE
 		File configFile = new File("..\\Routing\\src\\main\\resources\\config.txt");
 		if (!configFile.exists()) {
@@ -87,6 +88,7 @@ public class RouterController {
 			
 			// Create connection if doesn't exist one yet
 			if (!NetworkController.existOutputConnection(hostname)) {
+				System.out.println("There is no an output connection to '" + hostname + "'. Trying to get one.");
 				clientSocket = new ClientSocket(address, PORT, hostname);
 				new Thread(clientSocket).start();
 			} else {
@@ -107,6 +109,8 @@ public class RouterController {
 				dvtable.get(node1.getId()).put(node2.getId(), new Node(node2.getId(), aux, node2.getAddress()));
 			}
 		}
+		System.out.println("Router initial state successfully configured.");
+		System.out.println("************** INITIAL DISTANCE TABLE **************");
 		this.printDTable();
 	}
 	
@@ -116,6 +120,7 @@ public class RouterController {
 		for (Node node: nodes.values()) {
 			data += node.getId() + ":" + node.getCost() + "\n";
 		}
+		System.out.println("Sending initial DV to all nodes.");
 		for (Node node: nodes.values()) {
 			NetworkController.sendData(node.getId(), data);
 		}
@@ -124,6 +129,7 @@ public class RouterController {
 		int currentCost, newCost;
 		Timer timer = new Timer(); 
 		
+		System.out.println("RouterController: Starting main router controller.");
 		while (true) {
 			if (events.isEmpty()) {
 				continue;
@@ -136,7 +142,7 @@ public class RouterController {
 					currentCost = dvtable.get(packet.from).get(source).cost;
 					newCost = dvtable.get(packet.from).get(packet.from).cost + packet.costs.get(source);
 					if (newCost < currentCost) {
-						System.out.println("Cambiando costo a " + source + ", de " + currentCost + " a " + newCost);
+						System.out.println("DVTable: Cambiando costo a " + source + ", de " + currentCost + " a " + newCost);
 						dvtable.get(packet.from).get(source).cost = newCost;
 					}
 				}
@@ -147,6 +153,7 @@ public class RouterController {
 	}
 	
 	public static synchronized void receiveData(Packet packet) {
+		System.out.println("Queuing packet from '" + packet.from + "'");
 		events.add(packet);
 	}
 

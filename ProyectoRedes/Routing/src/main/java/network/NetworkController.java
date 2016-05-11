@@ -21,9 +21,6 @@ public final class NetworkController implements Runnable{
 	static Map<String, ServerRunnable> inputConnections;
 	static Map<String, ClientSocket> outputConnections;
 	
-	protected String interfaceName = "Intel(R) Dual Band Wireless-AC 3160";
-	static String LocalIPAddress = null;
-	
 	public NetworkController(int port, int nThreads) {
 
 		this.serverPort = port;
