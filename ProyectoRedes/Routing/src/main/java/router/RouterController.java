@@ -6,6 +6,7 @@ import java.nio.file.Paths;
 import java.sql.Time;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Timer;
@@ -125,6 +126,7 @@ public class RouterController {
 			NetworkController.sendData(node.getId(), data);
 		}
 		
+		events = new LinkedList<Packet>();
 		Packet packet;
 		int currentCost, newCost;
 		Timer timer = new Timer(); 
