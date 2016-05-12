@@ -39,6 +39,8 @@ public class ClientSocket implements Runnable{
         } catch (Exception e) {
         	Utils.printLog(1, "Attempt connection with '" + hostname + "' failed.", TAG);
         	this.closeConnection();
+        	
+        	return;
         }
         
         // Add new connection
@@ -47,13 +49,14 @@ public class ClientSocket implements Runnable{
     }
 
 	public void run() {
-		clientSocket.isConnected();
         // Login process: if FALSE, brook connection
-        if (!login()) {
-        	Utils.printLog(3, "Output connection with '" + this.hostname + "' failed.", TAG);
-        	NetworkController.outputConnections.remove(this.hostname);
-        	this.closeConnection();
-        }
+		if (!isStopped) {
+	        if (!login()) {
+	        	Utils.printLog(3, "Output connection with '" + this.hostname + "' failed.", TAG);
+	        	NetworkController.outputConnections.remove(this.hostname);
+	        	this.closeConnection();
+	        }
+		}
 
         // If logged successfully, start to sending data
 		while (!isStopped) {
