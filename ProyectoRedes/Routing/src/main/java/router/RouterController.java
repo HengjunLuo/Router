@@ -246,11 +246,14 @@ public class RouterController {
 	}
 	
 	public static void considerSendingPackets() {
+		Utils.printLog(3, "Checking router status...", TAG);
 		if (costChange) {
+			Utils.printLog(3, "Cost change ocurred. No handler for this!", TAG);
 			// TODO: WTF
 		}
 		// SENDS KEEP ALIVES
 		else {
+			Utils.printLog(3, "No cost change. Adding event to sen KEEP_ALIVE packets.", TAG);
 			events.add(new Packet(hostname, KEEP_ALIVE));
 		}
 	}

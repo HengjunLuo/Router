@@ -34,13 +34,11 @@ public class ClientSocket implements Runnable{
     	// Instantiate connection socket and output/input stream
         try {
         	clientSocket = new Socket(this.address, port);
-        	while (clientSocket == null) {}
             output = new DataOutputStream(clientSocket.getOutputStream());
             input = new DataInputStream(clientSocket.getInputStream());
-        } catch (UnknownHostException e) {
-        	Utils.printLog(1, "Don't know about host " + hostname, TAG);
-        } catch (IOException e) {
-        	Utils.printLog(1, "Couldn't get I/O for the connection to " + hostname, TAG);
+        } catch (Exception e) {
+        	Utils.printLog(1, "Attempt connection with '" + hostname + "' failed.", TAG);
+        	this.closeConnection();
         }
         
         // Add new connection
@@ -49,6 +47,7 @@ public class ClientSocket implements Runnable{
     }
 
 	public void run() {
+		clientSocket.isConnected();
         // Login process: if FALSE, brook connection
         if (!login()) {
         	Utils.printLog(3, "Output connection with '" + this.hostname + "' failed.", TAG);
@@ -113,9 +112,12 @@ public class ClientSocket implements Runnable{
 	public void closeConnection() {
 		try {
 			// Clean up
-			output.close();
-			input.close();
-			clientSocket.close();
+			if (output != null)
+				output.close();
+			if (input != null)
+				input.close();
+			if (clientSocket != null)
+				clientSocket.close();
 			
 			// Remove from network controller
 			NetworkController.removeClientConnection(this.hostname);
