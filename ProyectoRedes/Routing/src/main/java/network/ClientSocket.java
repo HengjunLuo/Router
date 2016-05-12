@@ -97,7 +97,7 @@ public class ClientSocket implements Runnable{
 			Utils.printLog(1, e.getMessage(), TAG);
 		}
     	
-    	if (response1.trim().equals("From:" + this.hostname) && response2.trim().equals("Type:HELLO")) {
+    	if (response1.trim().equals("From:" + this.hostname) && response2.trim().equals("Type:WELCOME")) {
     		Utils.printLog(3, "Output connection stablished with '" + this.hostname + "'.", TAG);
     		
     		return true;
