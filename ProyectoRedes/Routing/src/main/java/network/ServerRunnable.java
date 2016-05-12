@@ -48,7 +48,7 @@ public class ServerRunnable implements Runnable {
 		Map<String, Integer> costs;
 		int len, cost;
 		
-		System.out.println("Attending user requests:");
+		Utils.printLog(3, "Attending user requests:", TAG);
 
 		try {
 			// ********* Handshaking *********
@@ -68,7 +68,7 @@ public class ServerRunnable implements Runnable {
 			}
 			
 			// Handshaking successful
-			System.out.println("Returning WELCOME message to '" + this.hostname + "'");
+			Utils.printLog(3, "Returning WELCOME message to '" + this.hostname + "'", TAG);
 			output.println(
 				"From:" + RouterController.hostname + "\n" + 
 				"Type:WELCOME"
@@ -77,18 +77,18 @@ public class ServerRunnable implements Runnable {
 			lastAlive = new Date().getTime();
 			
 			NetworkController.inputConnections.put(this.hostname, this);
-			System.out.println("Input connection with '" + this.hostname + "' stablished.");
+			Utils.printLog(3, "Input connection with '" + this.hostname + "' stablished.", TAG);
 			
 			// Create a new output connection for this user if doesn't exist
 			if (!NetworkController.existOutputConnection(this.hostname)) {
-				System.out.println("ServerRunnable: There is no an output connection to '" + this.hostname + "'. Proceeding to create one.");
+				Utils.printLog(3, "ServerRunnable: There is no an output connection to '" + this.hostname + "'. Proceeding to create one.", TAG);
 				ClientSocket sender = new ClientSocket(this.address, RouterController.PORT, this.hostname);
 				new Thread(sender).start();
 			}
 			
 
 			// ********* Listening *********
-			System.out.println("Starting connection listener for '" + this.hostname + "'...");
+			Utils.printLog(3, "Starting connection listener for '" + this.hostname + "'...", TAG);
 			while (true) {
 				data = input.readLine();
 				splitted = data.split(":");
@@ -118,7 +118,7 @@ public class ServerRunnable implements Runnable {
 				
 				// Matching a KeepAlive packet
 				if (type.equals(RouterController.KEEP_ALIVE)) {
-					System.out.println("New KEEP_ALIVE packet from '" + this.hostname + "'");
+					Utils.printLog(3, "New KEEP_ALIVE packet from '" + this.hostname + "'", TAG);
 					NetworkController.receivePacket(
 							new Packet(from, type)
 					);
@@ -164,7 +164,7 @@ public class ServerRunnable implements Runnable {
 						costs.put(splitted[0].trim(), cost);
 					}
 					
-					System.out.println("New DV packet from '" + this.hostname + "'");
+					Utils.printLog(3, "New DV packet from '" + this.hostname + "'", TAG);
 					NetworkController.receivePacket(
 							new Packet(from, RouterController.DV, len, costs)
 					);
@@ -192,7 +192,7 @@ public class ServerRunnable implements Runnable {
 	 * @throws IOException
 	 */
 	public String login() throws IOException {
-		System.out.println("Login process...");
+		Utils.printLog(3, "Login process...", TAG);
 		String request, hostname;
 		String[] splitted;
 		
@@ -219,7 +219,7 @@ public class ServerRunnable implements Runnable {
 			return null;
 		}
 		
-		System.out.println("Login process with '" + hostname + "' successfully completed.");
+		Utils.printLog(3, "Login process with '" + hostname + "' successfully completed.", TAG);
 		// Logged successfully -> return host received
 		return hostname;
 	}
@@ -233,7 +233,7 @@ public class ServerRunnable implements Runnable {
 		// Remove from network controller
 		NetworkController.removeServerConnection(this.hostname);
 		
-		System.out.println("Client thread stopped.");
+		Utils.printLog(3, "Client thread stopped.", TAG);
 	}
 	
 	public String getHost() {

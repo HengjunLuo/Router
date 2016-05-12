@@ -41,20 +41,20 @@ public final class NetworkController implements Runnable{
 				clientSocket = this.serverSocket.accept();
 			} catch (IOException e) {
 				if (isStopped()) {
-					System.out.println("Server Stopped.");
+					Utils.printLog(3, "Server Stopped.", TAG);
 					break;
 				}
 				throw new RuntimeException("Error accepting client connection", e);
 			}
 			
-			System.out.println("\nNew client connection arrived:");
+			Utils.printLog(3, "\nNew client connection arrived:", TAG);
 			
 			// Start server listener for new node
 			this.threadPool.execute(new ServerRunnable(clientSocket));
 			
 		}
 		this.threadPool.shutdown();
-		System.out.println("Server Stopped.");
+		Utils.printLog(3, "Server Stopped.", TAG);
 	}
 
 	private synchronized boolean isStopped() {
@@ -76,7 +76,7 @@ public final class NetworkController implements Runnable{
 		} catch (IOException e) {
 			throw new RuntimeException("Cannot open port " + RouterController.PORT, e);
 		}
-		System.out.println("Server started. Listening...");
+		Utils.printLog(3, "Server started. Listening...", TAG);
 	}
 	
 	
@@ -105,7 +105,7 @@ public final class NetworkController implements Runnable{
 	 * @param data
 	 */
 	public static synchronized void receivePacket(Packet packet) {
-		System.out.println(packet.toString());
+		Utils.printLog(3, packet.toString(), TAG);
 		RouterController.receiveData(packet);
 	}
 	

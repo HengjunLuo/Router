@@ -1,16 +1,11 @@
 package router;
 
 import java.io.File;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.sql.Time;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import main.Utils;
 import network.ClientSocket;
@@ -28,7 +23,8 @@ public class RouterController {
 	public static final int timeT = 30;
 	public static final int timeU = 90;
 	public static String hostname;
-	private String TAG = "ROUTER CONTROLLER";
+	static boolean costChange = false;
+	static private String TAG = "ROUTER CONTROLLER";
 
 	NetworkController server;
 	Thread threadServer;
@@ -42,7 +38,7 @@ public class RouterController {
 	public RouterController() {
 		File myNameFile = new File("..\\Routing\\src\\main\\resources\\myname.txt");
 		// MAC syntax for paths
-		if (!System.getProperty("os.name").toLowerCase().contains("windows")) {
+		if (System.getProperty("os.name").toLowerCase().contains("mac")) {
 			myNameFile = new File("../Routing/src/main/resources/myname.txt");
 		}
 		if (!myNameFile.exists()) {
@@ -63,11 +59,11 @@ public class RouterController {
 	}
 	
 	private void setupInitialState() {
-		System.out.println("Setting router initial state...");
+		Utils.printLog(3, "Setting router initial state...", TAG);
 		// LOAD CONFIGURATION FILE
 		File configFile = new File("..\\Routing\\src\\main\\resources\\config.txt");
 		// MAC syntax for paths
-		if (!System.getProperty("os.name").toLowerCase().contains("windows")) {
+		if (System.getProperty("os.name").toLowerCase().contains("mac")) {
 			configFile = new File("../Routing/src/main/resources/config.txt");
 		}
 		if (!configFile.exists()) {
@@ -81,7 +77,6 @@ public class RouterController {
 		String[] splitted;
 		int aux = 0;
 		ClientSocket clientSocket;
-		Node node;
 		
 		for (String line: content) {
 			// Validate syntax
@@ -100,7 +95,7 @@ public class RouterController {
 			
 			// Create connection if doesn't exist one yet
 			if (!NetworkController.existOutputConnection(hostname)) {
-				System.out.println("RouterController: There is no an output connection to '" + hostname + "'. Trying to get one.");
+				Utils.printLog(3, "RouterController: There is no an output connection to '" + hostname + "'. Trying to get one.", TAG);
 				clientSocket = new ClientSocket(address, PORT, hostname);
 				new Thread(clientSocket).start();
 			} else {
@@ -137,50 +132,68 @@ public class RouterController {
 		for (Node node: nodes.values()) {
 			data += node.getId() + ":" + node.getCost() + "\n";
 		}
-		System.out.println("Sending initial DV to all nodes.");
+		Utils.printLog(3, "Sending initial DV to all nodes.", TAG);
 		for (Node node: nodes.values()) {
 			NetworkController.sendData(node.getId(), data);
 		}
 		
 		events = new LinkedList<Packet>();
 		Packet packet;
-		int currentCost, newCost;
-		Timer timer = new Timer(); 
+		int currentCost, newCost; 
 		
-		System.out.println("RouterController: Starting main router controller.");
+		Utils.printLog(3, "RouterController: Starting main router controller.", TAG);
 		while (true) {
 			if (events.isEmpty()) {
 				continue;
 			}
 			
 			packet = events.poll();
-			if (packet.type.equals(RouterController.DV)) {
-				System.out.println("Interpretando paquete tipo DV...");
-				for (String source: packet.costs.keySet()) {
-					currentCost = dvtable.get(source).get(packet.from).cost;
-					newCost = dvtable.get(packet.from).get(packet.from).cost + packet.costs.get(source);
-					if (newCost < currentCost) {
-						System.out.println("DVTable: Cambiando costo a " + source + ", de " + currentCost + " a " + newCost);
-						dvtable.get(source).get(packet.from).cost = newCost;
+			
+			// PACKETS FROM ME TO NEIGHBORS
+			if (packet.from.equals(hostname)) {
+				Utils.printLog(3, "Sending KEP_ALIVES´s...", TAG);
+				// Send KEEP_ALIVE packet
+				if (packet.type.equals(RouterController.KEEP_ALIVE)) {
+					data = "From:" + hostname + "\nType:" + KEEP_ALIVE + "\n";
+					for (Node node: this.nodes.values()) {
+						NetworkController.sendData(node.getId(), data);
 					}
 				}
+				// Send DV packet
+				else {
+					Utils.printLog(3, "Ignoring packet from me to others... Not implemented yet.", TAG);
+//					data = "From:" + hostname + "\nType:DV\nLen:" + nodes.size() + "\n";
+//					for (Node node: nodes.values()) {
+//						data += node.getId() + ":" + node.getCost() + "\n";
+//					}
+//					for (Node node: nodes.values()) {
+//						NetworkController.sendData(node.getId(), data);
+//					}
+				}
 			}
-			
-			timer.scheduleAtFixedRate(timerTask, 0, 1000);
+			// PACKETS FROM NEIGHBORS TO ME
+			else {
+				if (packet.type.equals(RouterController.DV)) {
+					Utils.printLog(3, "Interpretando paquete tipo DV...", TAG);
+					for (String source: packet.costs.keySet()) {
+						currentCost = dvtable.get(source).get(packet.from).cost;
+						newCost = dvtable.get(packet.from).get(packet.from).cost + packet.costs.get(source);
+						if (newCost < currentCost) {
+							Utils.printLog(3, "DVTable: Cambiando costo a " + source + ", de " + currentCost + " a " + newCost, TAG);
+							dvtable.get(source).get(packet.from).cost = newCost;
+						}
+					}
+				} else {
+					Utils.printLog(3, "Leyend paquete tipo KEEP_ALIVE de " + packet.from + "...", TAG);
+				}
+			}
 		}
 	}
 	
 	public static synchronized void receiveData(Packet packet) {
-		System.out.println("Queuing packet from '" + packet.from + "'");
+		Utils.printLog(3, "Queuing packet from '" + packet.from + "'", TAG);
 		events.add(packet);
 	}
-
-	TimerTask timerTask = new TimerTask() {
-        public void run() {
-        	printDTable();
-        } 
-    }; 
-
 
 	private void printDTable() {
 		System.out.println("-------- DISTANCE TABLE --------");
@@ -212,4 +225,16 @@ public class RouterController {
 		
 		return result;
 	}
+	
+	public static void considerSendingPackets() {
+		if (costChange) {
+			// TODO: WTF
+		}
+		// SENDS KEEP ALIVES
+		else {
+			events.add(new Packet(hostname, KEEP_ALIVE));
+		}
+	}
+	
+	
 }

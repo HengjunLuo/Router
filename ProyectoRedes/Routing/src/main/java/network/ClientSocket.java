@@ -3,7 +3,6 @@ package network;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.LinkedList;
@@ -23,7 +22,7 @@ public class ClientSocket implements Runnable{
     private DataInputStream input = null;
     private boolean isStopped = false;
     
-    private String TAG = "CLIENT SOCKET";
+    private static String TAG = "CLIENT SOCKET";
     
     
     public ClientSocket(String address, int port, String hostname) {
@@ -45,18 +44,18 @@ public class ClientSocket implements Runnable{
         }
         
         // Add new connection
-        System.out.println("Client socket openned for '" + this.hostname + "'");
+        Utils.printLog(3, "Client socket openned for '" + this.hostname + "'", TAG);
         NetworkController.outputConnections.put(this.hostname, this);
     }
     
 	private boolean login() {
-		System.out.println("Client login proccess with '" + this.hostname + "'...");
+		Utils.printLog(3, "Client login proccess with '" + this.hostname + "'...", TAG);
     	String request = "From:" + RouterController.hostname + "\n" + "Type:HELLO\n";
     	String response1="", response2="";
     	
     	// Sending request message
     	try {
-    		System.out.println("Sending HELLO to '" + this.hostname + "'...");
+    		Utils.printLog(3, "Sending HELLO to '" + this.hostname + "'...", TAG);
 			output.writeBytes(request);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -65,7 +64,7 @@ public class ClientSocket implements Runnable{
 
     	// Reading WELCOME message
     	try {
-    		System.out.println("Trying to read WELCOME from '" + this.hostname + "'...");
+    		Utils.printLog(3, "Trying to read WELCOME from '" + this.hostname + "'...", TAG);
 			response1 = input.readLine();
 			response2 = input.readLine();
 		} catch (IOException e) {
@@ -73,7 +72,7 @@ public class ClientSocket implements Runnable{
 			Utils.printLog(1, e.getMessage(), TAG);
 		}
     	if (response1.trim().equals("From:" + this.hostname) && response2.trim().equals("Type:HELLO")) {
-    		System.out.println("Output connection stablished with '" + this.hostname + "'.");    		
+    		Utils.printLog(3, "Output connection stablished with '" + this.hostname + "'.", TAG);
     		
     		return true;
     	}
@@ -84,7 +83,7 @@ public class ClientSocket implements Runnable{
 	public void run() {
         // Login process: if FALSE, brook connection
         if (!login()) {
-        	System.out.println("Output connection with '" + this.hostname + "' failed.");
+        	Utils.printLog(3, "Output connection with '" + this.hostname + "' failed.", TAG);
         	NetworkController.outputConnections.remove(this.hostname);
         	this.closeConnection();
         }
@@ -99,7 +98,7 @@ public class ClientSocket implements Runnable{
 			// If the queue is not empty, send the packet at the head of queue.
 			try {
 				String data = dataQueue.poll();
-				System.out.println("Sending to " + this.hostname + ": " + data );
+				Utils.printLog(3, "Sending to " + this.hostname + ": " + data , TAG);
 				output.writeBytes(data);
 			} catch (IOException e) {
 				Utils.printLog(1, "Sending data in node " + this.hostname, TAG);

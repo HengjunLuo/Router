@@ -4,11 +4,13 @@ public class Node {
 	String id;
 	int cost;
 	String address;
+	Node through;
 	
 	public Node(String id, int cost, String address) {
 		this.id = id;
 		this.cost = cost;
 		this.address = address;
+		this.through = null;
 	}
 
 	public String getId() {
@@ -35,6 +37,14 @@ public class Node {
 		this.address = address;
 	}
 	
+	public Node getThrough() {
+		return through;
+	}
+
+	public void setThrough(Node through) {
+		this.through = through;
+	}
+
 	public String toString() {
 		return "[" + this.id + ", " + this.cost + "]";
 	}
