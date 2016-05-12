@@ -1,16 +1,16 @@
 package router;
 
 public class Node {
-	String id;
-	int cost;
-	String address;
-	Node through;
+	private String id;
+	private int cost;
+	private String address;
+	private Node reachedThrough;
 	
 	public Node(String id, int cost, String address) {
 		this.id = id;
 		this.cost = cost;
 		this.address = address;
-		this.through = null;
+		this.reachedThrough = null;
 	}
 
 	public String getId() {
@@ -37,12 +37,13 @@ public class Node {
 		this.address = address;
 	}
 	
-	public Node getThrough() {
-		return through;
+	public Node getReachedThrough() {
+		return reachedThrough;
 	}
 
-	public void setThrough(Node through) {
-		this.through = through;
+	public void setReachedThrough(Node reachedThrough) {
+		this.reachedThrough = reachedThrough;
+		this.cost = reachedThrough.cost;
 	}
 
 	public String toString() {

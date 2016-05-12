@@ -76,7 +76,6 @@ public class ServerRunnable implements Runnable {
 			output.flush();
 			lastAlive = new Date().getTime();
 			
-			NetworkController.inputConnections.put(this.hostname, this);
 			Utils.printLog(3, "Input connection with '" + this.hostname + "' stablished.", TAG);
 			
 			// Create a new output connection for this user if doesn't exist

@@ -17,7 +17,7 @@ public class RouterController {
 	public static final int PORT = 9080;
 	public static final int NUM_THREADS = 4;
 	public static final int NUM_NODES = 4;
-	public static final int INFINITY = 999;
+	public static final int INFINITY = 99;
 	public static final String KEEP_ALIVE = "KeepAlive";
 	public static final String DV = "DV";
 	public static final int timeT = 30;
@@ -99,8 +99,7 @@ public class RouterController {
 				clientSocket = new ClientSocket(address, PORT, hostname);
 				new Thread(clientSocket).start();
 			} else {
-				Utils.printLog(2, "Trying to duplicate connection. A connection with " +
-						hostname + " already exist.", TAG);
+				Utils.printLog(2, "Trying to duplicate output connection with '" + hostname + "'.", TAG);
 			}
 			
 			// Add new node
@@ -112,7 +111,7 @@ public class RouterController {
 		for (Node node1: nodes.values()) {
 			dvtable.put(node1.getId(), new HashMap<String, Node>());
 			for (Node node2: nodes.values()) {
-				aux = (node2.getId().equals(node2.getId())) ? node2.getCost() : INFINITY;
+				aux = (node1.getId().equals(node2.getId())) ? node2.getCost() : INFINITY;
 				dvtable.get(node1.getId()).put(node2.getId(), new Node(node2.getId(), aux, node2.getAddress()));
 			}
 		}
@@ -176,15 +175,17 @@ public class RouterController {
 				if (packet.type.equals(RouterController.DV)) {
 					Utils.printLog(3, "Interpretando paquete tipo DV...", TAG);
 					for (String source: packet.costs.keySet()) {
-						currentCost = dvtable.get(source).get(packet.from).cost;
-						newCost = dvtable.get(packet.from).get(packet.from).cost + packet.costs.get(source);
+						currentCost = dvtable.get(source).get(packet.from).getCost();
+						newCost = dvtable.get(packet.from).get(packet.from).getCost() + packet.costs.get(source);
 						if (newCost < currentCost) {
 							Utils.printLog(3, "DVTable: Cambiando costo a " + source + ", de " + currentCost + " a " + newCost, TAG);
-							dvtable.get(source).get(packet.from).cost = newCost;
+							dvtable.get(source).get(packet.from).setCost(newCost);
 						}
 					}
+					// Update forwarding table after changes applied
+					this.updateForwardingTable();
 				} else {
-					Utils.printLog(3, "Leyend paquete tipo KEEP_ALIVE de " + packet.from + "...", TAG);
+					Utils.printLog(3, "Leyendo paquete tipo KEEP_ALIVE de " + packet.from + "...", TAG);
 				}
 			}
 		}
@@ -205,22 +206,40 @@ public class RouterController {
 		}
 	}
 	
-	public Map<String, String> getForwardingTable() {
-		Map<String, String> result = new HashMap<String, String>();
-		for (Node node: this.nodes.values()) {
+	private void printForwardingTable() {
+		for(Node node: this.nodes.values()) {
+			System.out.print(
+				"[to: " + node.getId() +
+				", cost: " + node.getCost() +
+				", through:" + node.getReachedThrough().getId() + "]"
+			);
+		}
+	}
+	
+	public void updateForwardingTable() {
+		Map<String, Node> cols;
+		for(String fila: this.dvtable.keySet()) {
+			cols = this.dvtable.get(fila);
 			Node through = null;
-			for (Node adya: this.dvtable.get(node.getId()).values()) {
+			for (Node col: cols.values()) {
 				if (through == null) {
-					through = adya;
+					through = col;
 					continue;
 				}
 				
-				if (adya.getCost() < through.getCost()) {
-					through = adya;
+				if (col.getCost() < through.getCost()) {
+					through = col;
 				}
 			}
-
-			result.put(node.getId(), through.getId());
+			
+			this.nodes.get(fila).setReachedThrough(through);
+		}
+	}
+	
+	public Map<String, String> getForwardingTable() {
+		Map<String, String> result = new HashMap<String, String>();
+		for (Node node: this.nodes.values()) {
+			result.put(node.getId(), node.getReachedThrough().getId());
 		}
 		
 		return result;

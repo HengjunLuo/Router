@@ -47,38 +47,6 @@ public class ClientSocket implements Runnable{
         Utils.printLog(3, "Client socket openned for '" + this.hostname + "'", TAG);
         NetworkController.outputConnections.put(this.hostname, this);
     }
-    
-	private boolean login() {
-		Utils.printLog(3, "Client login proccess with '" + this.hostname + "'...", TAG);
-    	String request = "From:" + RouterController.hostname + "\n" + "Type:HELLO\n";
-    	String response1="", response2="";
-    	
-    	// Sending request message
-    	try {
-    		Utils.printLog(3, "Sending HELLO to '" + this.hostname + "'...", TAG);
-			output.writeBytes(request);
-		} catch (IOException e) {
-			e.printStackTrace();
-			closeConnection();
-		}
-
-    	// Reading WELCOME message
-    	try {
-    		Utils.printLog(3, "Trying to read WELCOME from '" + this.hostname + "'...", TAG);
-			response1 = input.readLine();
-			response2 = input.readLine();
-		} catch (IOException e) {
-			e.printStackTrace();
-			Utils.printLog(1, e.getMessage(), TAG);
-		}
-    	if (response1.trim().equals("From:" + this.hostname) && response2.trim().equals("Type:HELLO")) {
-    		Utils.printLog(3, "Output connection stablished with '" + this.hostname + "'.", TAG);
-    		
-    		return true;
-    	}
-    	
-    	return false;
-    }
 
 	public void run() {
         // Login process: if FALSE, brook connection
@@ -101,11 +69,42 @@ public class ClientSocket implements Runnable{
 				Utils.printLog(3, "Sending to " + this.hostname + ": " + data , TAG);
 				output.writeBytes(data);
 			} catch (IOException e) {
-				Utils.printLog(1, "Sending data in node " + this.hostname, TAG);
-				e.printStackTrace();
+				Utils.printLog(1, "Sending data to " + this.hostname + " failed. " + e.getMessage(), TAG);
 			}
 		}
 	}
+	
+	private boolean login() {
+		Utils.printLog(3, "Client login proccess with '" + this.hostname + "'...", TAG);
+    	String request = "From:" + RouterController.hostname + "\n" + "Type:HELLO\n";
+    	String response1="", response2="";
+    	
+    	// Sending request message
+    	try {
+    		Utils.printLog(3, "Sending HELLO to '" + this.hostname + "'...", TAG);
+			output.writeBytes(request);
+		} catch (IOException e) {
+			Utils.printLog(1, "Trying to send HELLO request to '" + this.hostname + "'", TAG);
+			closeConnection();
+		}
+
+    	// Reading WELCOME message
+    	try {
+    		Utils.printLog(3, "Trying to read WELCOME from '" + this.hostname + "'...", TAG);
+			response1 = input.readLine();
+			response2 = input.readLine();
+		} catch (IOException e) {
+			Utils.printLog(1, e.getMessage(), TAG);
+		}
+    	
+    	if (response1.trim().equals("From:" + this.hostname) && response2.trim().equals("Type:HELLO")) {
+    		Utils.printLog(3, "Output connection stablished with '" + this.hostname + "'.", TAG);
+    		
+    		return true;
+    	}
+    	
+    	return false;
+    }
 	
 	public void addData(String data) {
 		dataQueue.add(data);
