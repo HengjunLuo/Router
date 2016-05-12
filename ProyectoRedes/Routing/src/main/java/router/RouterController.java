@@ -16,6 +16,7 @@ import main.Utils;
 import network.ClientSocket;
 import network.NetworkController;
 import network.Packet;
+import network.ConnectivityChecker;
 
 public class RouterController {
 	public static final int PORT = 9080;
@@ -24,6 +25,8 @@ public class RouterController {
 	public static final int INFINITY = 999;
 	public static final String KEEP_ALIVE = "KeepAlive";
 	public static final String DV = "DV";
+	public static final int timeT = 30;
+	public static final int timeU = 90;
 	public static String hostname;
 	private String TAG = "ROUTER CONTROLLER";
 
@@ -38,8 +41,12 @@ public class RouterController {
 	
 	public RouterController() {
 		File myNameFile = new File("..\\Routing\\src\\main\\resources\\myname.txt");
+		// MAC syntax for paths
+		if (!System.getProperty("os.name").toLowerCase().contains("windows")) {
+			myNameFile = new File("../Routing/src/main/resources/myname.txt");
+		}
 		if (!myNameFile.exists()) {
-			Utils.printError(1, "Text file with host name doesn't exist.", TAG);
+			Utils.printLog(1, "Text file with host name doesn't exist.", TAG);
 			System.exit(0);
 		}
 		hostname = Utils.readFile(myNameFile).get(0).trim();
@@ -59,6 +66,10 @@ public class RouterController {
 		System.out.println("Setting router initial state...");
 		// LOAD CONFIGURATION FILE
 		File configFile = new File("..\\Routing\\src\\main\\resources\\config.txt");
+		// MAC syntax for paths
+		if (!System.getProperty("os.name").toLowerCase().contains("windows")) {
+			configFile = new File("../Routing/src/main/resources/config.txt");
+		}
 		if (!configFile.exists()) {
 			System.err.println("Unable to load configuration file.");
 			System.exit(0);			
@@ -76,14 +87,14 @@ public class RouterController {
 			// Validate syntax
 			splitted = line.split(" ");
 			if (splitted.length != 3) {
-				Utils.printError(2, "Syntax error in config file. Skipping definition at line " + aux, TAG);
+				Utils.printLog(2, "Syntax error in config file. Skipping definition at line " + aux, TAG);
 				continue;
 			}
 			address = splitted[0];
 			hostname = splitted[1];
 			cost = splitted[2];
 			if (!Utils.validate(address) || hostname.equals("") || !cost.matches("[0-9]+")) {
-				Utils.printError(2, "Syntax error in config file. Skipping definition at line " + aux, TAG);
+				Utils.printLog(2, "Syntax error in config file. Skipping definition at line " + aux, TAG);
 				continue;
 			}
 			
@@ -93,7 +104,7 @@ public class RouterController {
 				clientSocket = new ClientSocket(address, PORT, hostname);
 				new Thread(clientSocket).start();
 			} else {
-				Utils.printError(2, "Trying to duplicate connection. A connection with " +
+				Utils.printLog(2, "Trying to duplicate connection. A connection with " +
 						hostname + " already exist.", TAG);
 			}
 			
@@ -110,6 +121,11 @@ public class RouterController {
 				dvtable.get(node1.getId()).put(node2.getId(), new Node(node2.getId(), aux, node2.getAddress()));
 			}
 		}
+		
+		// Start thread for connectivity verification.
+		Thread aliveThread = new Thread(new ConnectivityChecker());
+		aliveThread.start();
+		
 		System.out.println("Router initial state successfully configured.");
 		System.out.println("************** INITIAL DISTANCE TABLE **************");
 		this.printDTable();
@@ -141,11 +157,11 @@ public class RouterController {
 			if (packet.type.equals(RouterController.DV)) {
 				System.out.println("Interpretando paquete tipo DV...");
 				for (String source: packet.costs.keySet()) {
-					currentCost = dvtable.get(packet.from).get(source).cost;
+					currentCost = dvtable.get(source).get(packet.from).cost;
 					newCost = dvtable.get(packet.from).get(packet.from).cost + packet.costs.get(source);
 					if (newCost < currentCost) {
 						System.out.println("DVTable: Cambiando costo a " + source + ", de " + currentCost + " a " + newCost);
-						dvtable.get(packet.from).get(source).cost = newCost;
+						dvtable.get(source).get(packet.from).cost = newCost;
 					}
 				}
 			}
@@ -174,5 +190,26 @@ public class RouterController {
 			}
 			System.out.println();
 		}
+	}
+	
+	public Map<String, String> getForwardingTable() {
+		Map<String, String> result = new HashMap<String, String>();
+		for (Node node: this.nodes.values()) {
+			Node through = null;
+			for (Node adya: this.dvtable.get(node.getId()).values()) {
+				if (through == null) {
+					through = adya;
+					continue;
+				}
+				
+				if (adya.getCost() < through.getCost()) {
+					through = adya;
+				}
+			}
+
+			result.put(node.getId(), through.getId());
+		}
+		
+		return result;
 	}
 }

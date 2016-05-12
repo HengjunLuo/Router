@@ -39,9 +39,9 @@ public class ClientSocket implements Runnable{
             output = new DataOutputStream(clientSocket.getOutputStream());
             input = new DataInputStream(clientSocket.getInputStream());
         } catch (UnknownHostException e) {
-        	Utils.printError(1, "Don't know about host " + hostname, TAG);
+        	Utils.printLog(1, "Don't know about host " + hostname, TAG);
         } catch (IOException e) {
-        	Utils.printError(1, "Couldn't get I/O for the connection to " + hostname, TAG);
+        	Utils.printLog(1, "Couldn't get I/O for the connection to " + hostname, TAG);
         }
         
         // Add new connection
@@ -70,7 +70,7 @@ public class ClientSocket implements Runnable{
 			response2 = input.readLine();
 		} catch (IOException e) {
 			e.printStackTrace();
-			Utils.printError(1, e.getMessage(), TAG);
+			Utils.printLog(1, e.getMessage(), TAG);
 		}
     	if (response1.trim().equals("From:" + this.hostname) && response2.trim().equals("Type:HELLO")) {
     		System.out.println("Output connection stablished with '" + this.hostname + "'.");    		
@@ -102,7 +102,7 @@ public class ClientSocket implements Runnable{
 				System.out.println("Sending to " + this.hostname + ": " + data );
 				output.writeBytes(data);
 			} catch (IOException e) {
-				Utils.printError(1, "Sending data in node " + this.hostname, TAG);
+				Utils.printLog(1, "Sending data in node " + this.hostname, TAG);
 				e.printStackTrace();
 			}
 		}
@@ -125,7 +125,7 @@ public class ClientSocket implements Runnable{
 			// Set flag to stopped
 			isStopped = true;
 		} catch (IOException e) {
-			Utils.printError(1, "Clossing connection with '" + this.hostname + "'.", TAG);
+			Utils.printLog(1, "Clossing connection with '" + this.hostname + "'.", TAG);
 			e.printStackTrace();
 		}
 	}

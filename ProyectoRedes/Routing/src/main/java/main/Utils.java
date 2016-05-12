@@ -63,13 +63,16 @@ public class Utils {
 		return null;
 	}
 	
-	public static void printError(int type, String error, String TAG) {
+	public static void printLog(int type, String error, String TAG) {
 		switch (type) {
 			case 1:
 				System.out.println("ERROR - " + TAG + ": " + error);
 				break;
 			case 2:
 				System.out.println("WARNING - " + TAG + ": " + error);
+				break;
+			case 3:
+				System.out.println("INFO - " + TAG + ": " + error);
 				break;
 		}
 	}

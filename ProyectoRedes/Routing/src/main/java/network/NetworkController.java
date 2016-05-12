@@ -96,7 +96,7 @@ public final class NetworkController implements Runnable{
 		if (outputConnections.containsKey(host)) {
 			outputConnections.get(host).addData(data);
 		} else {
-			Utils.printError(2, "Trying to send data to a disconnected node: '" + host + "'", TAG);
+			Utils.printLog(2, "Trying to send data to a disconnected node: '" + host + "'", TAG);
 		}
 	}
 	
@@ -115,5 +115,17 @@ public final class NetworkController implements Runnable{
 
 	public static synchronized boolean existInputConnection(String host) {
 		return inputConnections.containsKey(host);
+	}
+	
+	public static void checkKeepAlive() {
+		long currentTime;
+		for (ServerRunnable listener: inputConnections.values()) {
+			currentTime = new Date().getTime();
+			if (currentTime - listener.getLastAlive() > RouterController.timeU) {
+				Utils.printLog(2, "The '" + listener.getHost() + "' host has been dropped.", TAG);;
+			} else {
+				Utils.printLog(3, "Host '" + listener.getHost() + "' keeps alive.", TAG);;
+			}
+		}
 	}
 }

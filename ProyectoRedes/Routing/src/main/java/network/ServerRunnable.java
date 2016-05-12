@@ -2,6 +2,7 @@ package network;
 
 import java.io.*;
 import java.net.*;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,11 +14,12 @@ public class ServerRunnable implements Runnable {
 	protected Socket clientSocket = null;
 	protected String address = null;
 	protected String hostname;
-	BufferedReader input = null;
-	PrintWriter output = null;
+	private BufferedReader input = null;
+	private PrintWriter output = null;
 	
 	static String TAG = "LISTENER";
 	protected boolean listening = true;
+	protected long lastAlive = 0;
 	
 	
 	public ServerRunnable(Socket clientSocket) {
@@ -27,7 +29,7 @@ public class ServerRunnable implements Runnable {
 		try {
 			this.address = clientSocket.getLocalAddress().getHostAddress();
 		} catch (Exception e1) {
-			Utils.printError(1, "Trying to get romote IP from " + hostname, TAG);
+			Utils.printLog(1, "Trying to get romote IP from " + hostname, TAG);
 			e1.printStackTrace();
 		}
 		
@@ -52,14 +54,14 @@ public class ServerRunnable implements Runnable {
 			// ********* Handshaking *********
 			this.hostname = login();
 			if (this.hostname == null) {
-				Utils.printError(2, "Handshaking error! Connection clossed.", TAG);
+				Utils.printLog(2, "Handshaking error! Connection clossed.", TAG);
 				closeConnection();
 				
 				return;
 			}
 			
 			if (NetworkController.existInputConnection(this.hostname)) {
-				Utils.printError(2, "Trying to duplicate connection. A listener for " +
+				Utils.printLog(2, "Trying to duplicate connection. A listener for " +
 						this.hostname + " already exist.", TAG);
 				
 				return;
@@ -72,6 +74,7 @@ public class ServerRunnable implements Runnable {
 				"Type:WELCOME"
 			);
 			output.flush();
+			lastAlive = new Date().getTime();
 			
 			NetworkController.inputConnections.put(this.hostname, this);
 			System.out.println("Input connection with '" + this.hostname + "' stablished.");
@@ -91,12 +94,12 @@ public class ServerRunnable implements Runnable {
 				splitted = data.split(":");
 
 				if (splitted.length != 2) {
-					Utils.printError(2, "Syntax error at line 1 from " + hostname, TAG);
+					Utils.printLog(2, "Syntax error at line 1 from " + hostname, TAG);
 					continue;
 				}
 
 				if (!splitted[0].equals("From")) {
-					Utils.printError(1, "Syntax error at line 1 from " + hostname, TAG);
+					Utils.printLog(1, "Syntax error at line 1 from " + hostname, TAG);
 					continue;
 				}
 				
@@ -105,7 +108,7 @@ public class ServerRunnable implements Runnable {
 				// Second line
 				data = input.readLine();
 				if (!data.trim().equals("Type:KeepAlive") && !data.trim().equals("Type:DV")) {
-					Utils.printError(1, "Unknow type in received data from " + hostname, TAG);
+					Utils.printLog(1, "Unknow type in received data from " + hostname, TAG);
 					continue;
 				}
 				
@@ -126,17 +129,17 @@ public class ServerRunnable implements Runnable {
 					splitted = data.split(":");
 					
 					if (splitted.length != 2) {
-						Utils.printError(2, "Syntax error at line 3 from " + this.hostname, TAG);
+						Utils.printLog(2, "Syntax error at line 3 from " + this.hostname, TAG);
 						continue;
 					}
 					if (!splitted[0].trim().equals("Len")) {
-						Utils.printError(2, "Syntax error at line 3 from " + this.hostname, TAG);
+						Utils.printLog(2, "Syntax error at line 3 from " + this.hostname, TAG);
 						continue;
 					}
 					try {
 						len = Integer.parseInt(data.split(":")[1]);
 					} catch (NumberFormatException e) {
-						Utils.printError(2, "Number format exception. Data recevide from " + this.hostname, TAG);
+						Utils.printLog(2, "Number format exception. Data recevide from " + this.hostname, TAG);
 						continue;
 					}
 
@@ -147,14 +150,14 @@ public class ServerRunnable implements Runnable {
 						splitted = data.split(":");
 
 						if (splitted.length != 2) {
-							Utils.printError(2, "Syntax error at line " + (4 + i)+  " from " + this.hostname, TAG);
+							Utils.printLog(2, "Syntax error at line " + (4 + i)+  " from " + this.hostname, TAG);
 							continue;
 						}
 						
 						try {
 							cost = Integer.parseInt(splitted[1].trim());
 						} catch (NumberFormatException e) {
-							Utils.printError(2, "Number format exception. Data recevide from " + this.hostname, TAG);
+							Utils.printLog(2, "Number format exception. Data recevide from " + this.hostname, TAG);
 							continue;
 						}
 						
@@ -166,6 +169,9 @@ public class ServerRunnable implements Runnable {
 							new Packet(from, RouterController.DV, len, costs)
 					);
 				}
+				
+				// Last time it was received a packet from this host.
+				lastAlive = new Date().getTime();
 			}
 		}
 		catch (IOException error) {
@@ -232,5 +238,9 @@ public class ServerRunnable implements Runnable {
 	
 	public String getHost() {
 		return this.hostname;
+	}
+	
+	public long getLastAlive() {
+		return this.lastAlive;
 	}
 }
