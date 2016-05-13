@@ -120,6 +120,7 @@ public class ClientSocket implements Runnable{
 			// If the queue is not empty, send the packet at the head of queue.
 			try {
 				String data = dataQueue.poll();
+				Utils.printLog(3, this.hostname +": Sending data: " + data, TAG);
 				output.writeBytes(data);
 			} catch (IOException e) {
 				Utils.printLog(1, "Sending data to " + this.hostname + " failed. " + e.getMessage(), TAG);
@@ -128,6 +129,7 @@ public class ClientSocket implements Runnable{
 	}
 	
 	public void addData(String data) {
+		Utils.printLog(3, this.hostname +": Queing data to send: " + data, TAG);
 		dataQueue.add(data);
 	}
 	
