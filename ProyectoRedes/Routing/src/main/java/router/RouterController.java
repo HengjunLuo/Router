@@ -189,6 +189,11 @@ public class RouterController {
 				if (packet.type.equals(RouterController.DV)) {
 					Utils.printLog(3, "Interpretando paquete tipo DV...", TAG);
 					for (String destiny: packet.costs.keySet()) {
+						// Obviar actualizaciones de DV hacia mi.
+						// TODO: Confirmar con Pablo Estrada
+						if (destiny.equals(hostname)) {
+							continue;
+						}
 						// DV update to a known node
 						if (dvtable.containsKey(destiny)) {
 							currentCost = dvtable.get(destiny).get(packet.from).getCost();
