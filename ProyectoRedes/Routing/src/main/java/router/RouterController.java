@@ -55,7 +55,6 @@ public class RouterController {
 		dvtable = new HashMap<String, Map<String, Node>>();
 		nodes = new HashMap<String, Node>();
 		
-		setupInitialState();
 		startRouter();
 	}
 	
@@ -128,11 +127,13 @@ public class RouterController {
 		senderThread.start();
 		
 		System.out.println("Router initial state successfully configured.");
-		System.out.println("************** INITIAL DISTANCE TABLE **************");
 		this.printDTable();
 	}
 	
 	public void startRouter() {
+		// Setup initial state
+		setupInitialState();
+		
 		// Send DV to all neighbors
 		String data = "From:" + hostname + "\nType:DV\nLen:" + nodes.size() + "\n";
 		for (Node node: nodes.values()) {
@@ -152,14 +153,16 @@ public class RouterController {
 			if (events.isEmpty()) {
 				continue;
 			}
-			
+
 			packet = events.poll();
+			Utils.printLog(3, "Executing event of type " + packet.type + "...", TAG);
+			Utils.printLog(3, packet.toString(), TAG);
 			
 			// PACKETS FROM ME TO NEIGHBORS
 			if (packet.from.equals(hostname)) {
-				Utils.printLog(3, "Sending KEP_ALIVES´s...", TAG);
 				// Send KEEP_ALIVE packet
 				if (packet.type.equals(RouterController.KEEP_ALIVE)) {
+					Utils.printLog(3, "Sending KEP_ALIVES´s...", TAG);
 					data = "From:" + hostname + "\nType:" + KEEP_ALIVE + "\n";
 					for (Node node: nodes.values()) {
 						// Only send to adjacent nodes.
@@ -170,6 +173,7 @@ public class RouterController {
 				}
 				// Send DV packet
 				else {
+					Utils.printLog(3, "Sending DV packets...", TAG);
 					data = "From:" + hostname + "\nType:DV\nLen:" + nodes.size() + "\n";
 					for (String destiny: packet.costs.keySet()) {
 						data += destiny + ":" + packet.costs.get(destiny) + "\n";
@@ -257,6 +261,7 @@ public class RouterController {
 	}
 	
 	public void updateForwardingTable() {
+		Utils.printLog(3, "Updating distance table...", TAG);
 		Map<String, Node> cols;
 		for(String fila: dvtable.keySet()) {
 			cols = dvtable.get(fila);
@@ -270,6 +275,8 @@ public class RouterController {
 				if (col.getCost() < through.getCost()) {
 					through = col;
 					costChange = true;
+					Utils.printLog(3, "Cost changed during DV update. Cost to '"
+							+ fila + "' is now " + col.getCost() + "'", TAG);
 				}
 			}
 			
@@ -284,7 +291,7 @@ public class RouterController {
 	public static void considerSendingPackets() {
 		Utils.printLog(3, "Checking router status...", TAG);
 		if (costChange) {
-			Utils.printLog(3, "Cost change ocurred. Building packet to send...", TAG);
+			Utils.printLog(3, "Cost change ocurred. Building DV packet to send...", TAG);
 			Map<String, Integer> costs = new HashMap<String, Integer>();
 			for (Node node: nodes.values()) {
 				costs.put(node.getAddress(), node.getCost());
@@ -294,7 +301,7 @@ public class RouterController {
 		}
 		// SENDS KEEP ALIVES
 		else {
-			Utils.printLog(3, "No cost change. Adding event to sen KEEP_ALIVE packets.", TAG);
+			Utils.printLog(3, "No cost change. Building KEEP_ALIVE packet to send...", TAG);
 			events.add(new Packet(hostname, KEEP_ALIVE));
 		}
 	}
