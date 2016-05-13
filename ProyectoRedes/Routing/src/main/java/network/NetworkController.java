@@ -6,6 +6,7 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import router.Node;
 import router.RouterController;
 import main.Utils;
 
@@ -105,7 +106,30 @@ public final class NetworkController implements Runnable{
 	 * @param data
 	 */
 	public static synchronized void receivePacket(Packet packet) {
-		RouterController.receiveData(packet);
+		Utils.printLog(3, "Receiving new packet:\n" + packet.toString(), TAG);
+		RouterController.receivePacket(packet);
+	}
+	
+	public static synchronized void sendPacket(String host, Packet packet) {
+		if (outputConnections.containsKey(host)) {
+			String data = "";
+			// Send DV packet
+			if (packet.type.equals(RouterController.DV)) {
+				data = "From:" + packet.from + "\nType:DV\nLen:" + packet.len + "\n";
+				for (String destiny: packet.costs.keySet()) {
+					data += destiny + ":" + packet.costs.get(destiny) + "\n";
+				}
+			}
+			// Send KEEP_ALIVE packet
+			else {
+				data = "From:" + packet.from + "\nType:KEEP_ALIVE\n";
+			}
+
+			Utils.printLog(3, "Queing new packet to send:\n" + packet.toString(), TAG);
+			outputConnections.get(host).addData(data);
+		} else {
+			Utils.printLog(2, "Trying to send data to a disconnected node: '" + host + "'", TAG);
+		}
 	}
 	
 	public static synchronized boolean existOutputConnection(String host) {

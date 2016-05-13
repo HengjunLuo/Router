@@ -132,14 +132,15 @@ public class RouterController {
 		// Setup initial state
 		setupInitialState();
 		
-		// Send DV to all neighbors
-		String data = "From:" + hostname + "\nType:DV\nLen:" + nodes.size() + "\n";
-		for (Node node: nodes.values()) {
-			data += node.getId() + ":" + node.getCost() + "\n";
-		}
+		// Send DV packets to all neighbors
 		Utils.printLog(3, "Sending initial DV to all nodes.", TAG);
+		Map<String, Integer> costs = new HashMap<String, Integer>();
 		for (Node node: nodes.values()) {
-			NetworkController.sendData(node.getId(), data);
+			costs.put(node.getId(), node.getCost());
+		}
+		for (Node node: nodes.values()) {
+			if (node.isItIsAdjacent())
+				NetworkController.sendPacket(node.getId(), new Packet(hostname, DV, costs.size(), costs));
 		}
 		
 		events = new LinkedList<Packet>();
@@ -158,34 +159,14 @@ public class RouterController {
 			
 			// PACKETS FROM ME TO NEIGHBORS
 			if (packet.from.equals(hostname)) {
-				// Send KEEP_ALIVE packet
-				if (packet.type.equals(RouterController.KEEP_ALIVE)) {
-					Utils.printLog(3, "Sending KEP_ALIVES´s...", TAG);
-					data = "From:" + hostname + "\nType:" + KEEP_ALIVE + "\n";
-					for (Node node: nodes.values()) {
-						// Only send to adjacent nodes.
-						if (node.isItIsAdjacent()) {
-							NetworkController.sendData(node.getId(), data);							
-						}
-					}
-				}
-				// Send DV packet
-				else {
-					Utils.printLog(3, "Sending DV packets...", TAG);
-					data = "From:" + hostname + "\nType:DV\nLen:" + nodes.size() + "\n";
-					for (String destiny: packet.costs.keySet()) {
-						data += destiny + ":" + packet.costs.get(destiny) + "\n";
-					}
-					for (Node node: nodes.values()) {
-						// Only send to adjacent nodes.
-						if (node.isItIsAdjacent()) {
-							NetworkController.sendData(node.getId(), data);
-						}
+				for (Node node: nodes.values()) {
+					// Only send to adjacent nodes.
+					if (node.isItIsAdjacent()) {
+						NetworkController.sendPacket(node.getId(), packet);							
 					}
 				}
 			}
 			
-
 			// PACKETS FROM NEIGHBORS TO ME
 			else {
 				if (packet.type.equals(RouterController.DV)) {
@@ -233,7 +214,7 @@ public class RouterController {
 		}
 	}
 	
-	public static synchronized void receiveData(Packet packet) {
+	public static synchronized void receivePacket(Packet packet) {
 		Utils.printLog(3, "Queuing packet from '" + packet.from + "'", TAG);
 		events.add(packet);
 	}
@@ -291,7 +272,7 @@ public class RouterController {
 		if (costChange) {
 			Map<String, Integer> costs = new HashMap<String, Integer>();
 			for (Node node: nodes.values()) {
-				costs.put(node.getAddress(), node.getCost());
+				costs.put(node.getId(), node.getCost());
 			}
 			events.add(new Packet(hostname, DV, nodes.size(), costs));
 			Utils.printLog(3, "Cost change ocurred. Event 'Send DV packets' added.", TAG);
