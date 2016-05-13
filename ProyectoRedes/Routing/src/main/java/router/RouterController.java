@@ -155,7 +155,8 @@ public class RouterController {
 			}
 
 			packet = events.poll();
-			Utils.printLog(3, "Executing event of type " + packet.type + " from " + packet.from + "...", TAG);
+			Utils.printLog(3, "Executing event of type " + packet.type + "...", TAG);
+			Utils.printLog(3, packet.toString(), TAG);
 			
 			// PACKETS FROM ME TO NEIGHBORS
 			if (packet.from.equals(hostname)) {

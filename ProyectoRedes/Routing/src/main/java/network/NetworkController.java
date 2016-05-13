@@ -105,7 +105,6 @@ public final class NetworkController implements Runnable{
 	 * @param data
 	 */
 	public static synchronized void receivePacket(Packet packet) {
-		Utils.printLog(3, packet.toString(), TAG);
 		RouterController.receiveData(packet);
 	}
 	
