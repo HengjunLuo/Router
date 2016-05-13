@@ -54,8 +54,6 @@ public class RouterController {
 		
 		dvtable = new HashMap<String, Map<String, Node>>();
 		nodes = new HashMap<String, Node>();
-		
-		startRouter();
 	}
 	
 	private void setupInitialState() {
@@ -118,7 +116,7 @@ public class RouterController {
 			}
 		}
 		
-		// Start thread for connectivity verification.
+		// Start thread for connectivity verification
 		Thread aliveThread = new Thread(new ConnectivityChecker());
 		aliveThread.start();
 		
@@ -284,25 +282,25 @@ public class RouterController {
 		}
 	}
 	
-	public Map<String, Node> getForwardingTable() {
+	public static synchronized Map<String, Node> getForwardingTable() {
 		return nodes;
 	}
 	
-	public static void considerSendingPackets() {
+	public static synchronized void considerSendingPackets() {
 		Utils.printLog(3, "Checking router status...", TAG);
 		if (costChange) {
-			Utils.printLog(3, "Cost change ocurred. Building DV packet to send...", TAG);
 			Map<String, Integer> costs = new HashMap<String, Integer>();
 			for (Node node: nodes.values()) {
 				costs.put(node.getAddress(), node.getCost());
 			}
 			events.add(new Packet(hostname, DV, nodes.size(), costs));
+			Utils.printLog(3, "Cost change ocurred. Event 'Send DV packets' added.", TAG);
 			costChange = false;
 		}
 		// SENDS KEEP ALIVES
 		else {
-			Utils.printLog(3, "No cost change. Building KEEP_ALIVE packet to send...", TAG);
 			events.add(new Packet(hostname, KEEP_ALIVE));
+			Utils.printLog(3, "No cost change. Event 'Send KEEP_ALIVE packets' added.", TAG);
 		}
 	}
 	
