@@ -38,8 +38,7 @@ public class ServerRunnable implements Runnable {
 			output = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
 		} catch (IOException e) {
 			e.printStackTrace();
-		}
-		
+		}		
 	}
 	
 	public void run() {
@@ -66,6 +65,9 @@ public class ServerRunnable implements Runnable {
 				
 				return;
 			}
+			
+			// Registering listener socket
+			NetworkController.inputConnections.put(this.hostname, this);
 			
 			// Handshaking successful
 			Utils.printLog(3, "Returning WELCOME message to '" + this.hostname + "'", TAG);

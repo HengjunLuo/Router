@@ -148,8 +148,16 @@ public class RouterController {
 		int currentCost, newCost; 
 		
 		Utils.printLog(3, "RouterController: Starting main router controller.", TAG);
+		int i = 0;
 		while (true) {
 			if (events.isEmpty()) {
+				System.out.println("Ningun evento diponible. Durmiendo por 10s");
+				try {
+					Thread.sleep(10000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				continue;
 			}
 
@@ -170,10 +178,9 @@ public class RouterController {
 			// PACKETS FROM NEIGHBORS TO ME
 			else {
 				if (packet.type.equals(RouterController.DV)) {
-					Utils.printLog(3, "Interpretando paquete tipo DV...", TAG);
 					for (String destiny: packet.costs.keySet()) {
 						// Obviar actualizaciones de DV hacia mi.
-						// TODO: Confirmar con Pablo Estrada
+						// WARNING: Quizás esta no sea la mejor idea pero no nos queremos complicar.
 						if (destiny.equals(hostname)) {
 							continue;
 						}
@@ -215,7 +222,7 @@ public class RouterController {
 	}
 	
 	public static synchronized void receivePacket(Packet packet) {
-		Utils.printLog(3, "Queuing packet from '" + packet.from + "'", TAG);
+		Utils.printLog(3, "Queuing new packet received from '" + packet.from + "'", TAG);
 		events.add(packet);
 	}
 
