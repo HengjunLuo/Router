@@ -123,6 +123,7 @@ public final class NetworkController implements Runnable{
 			currentTime = new Date().getTime();
 			if (currentTime - listener.getLastAlive() > RouterController.timeU) {
 				Utils.printLog(2, "The '" + listener.getHost() + "' host has been dropped.", TAG);;
+				// TODO: Remove this connection or set cost to INFINITY
 			} else {
 				Utils.printLog(3, "Host '" + listener.getHost() + "' keeps alive.", TAG);;
 			}

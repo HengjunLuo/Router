@@ -12,6 +12,7 @@ import network.ClientSocket;
 import network.NetworkController;
 import network.Packet;
 import network.ConnectivityChecker;
+import network.SenderThread;
 
 public class RouterController {
 	public static final int PORT = 9080;
@@ -31,8 +32,8 @@ public class RouterController {
 	String setupFileName = "config.txt";
 	
 	private static Queue<Packet> events;
-	private Map<String, Map<String, Node>> dvtable;
-	private Map<String, Node> nodes;
+	private static Map<String, Map<String, Node>> dvtable;
+	private static Map<String, Node> nodes;
 
 	
 	public RouterController() {
@@ -102,23 +103,29 @@ public class RouterController {
 				Utils.printLog(2, "Trying to duplicate output connection with '" + hostname + "'.", TAG);
 			}
 			
-			// Add new node
-			nodes.put(hostname, new Node(hostname, Integer.parseInt(cost), address));
+			// Add new node as adjacent
+			nodes.put(hostname, new Node(hostname, Integer.parseInt(cost), address, true));
+			// Reached by itself since it's a neighbor
+			nodes.get(hostname).setReachedThrough(nodes.get(hostname));
 			aux++;
 		}
 		
-		// Build initial DV Table
+		// Build initial DV Table: All initial nodes are adjacent.
 		for (Node node1: nodes.values()) {
 			dvtable.put(node1.getId(), new HashMap<String, Node>());
 			for (Node node2: nodes.values()) {
 				aux = (node1.getId().equals(node2.getId())) ? node2.getCost() : INFINITY;
-				dvtable.get(node1.getId()).put(node2.getId(), new Node(node2.getId(), aux, node2.getAddress()));
+				dvtable.get(node1.getId()).put(node2.getId(), new Node(node2.getId(), aux, node2.getAddress(), true));
 			}
 		}
 		
 		// Start thread for connectivity verification.
 		Thread aliveThread = new Thread(new ConnectivityChecker());
 		aliveThread.start();
+		
+		// Start thread for considering sending DV or KEEP_ALIVE packet
+		Thread senderThread = new Thread(new SenderThread());
+		senderThread.start();
 		
 		System.out.println("Router initial state successfully configured.");
 		System.out.println("************** INITIAL DISTANCE TABLE **************");
@@ -154,38 +161,66 @@ public class RouterController {
 				// Send KEEP_ALIVE packet
 				if (packet.type.equals(RouterController.KEEP_ALIVE)) {
 					data = "From:" + hostname + "\nType:" + KEEP_ALIVE + "\n";
-					for (Node node: this.nodes.values()) {
-						NetworkController.sendData(node.getId(), data);
+					for (Node node: nodes.values()) {
+						// Only send to adjacent nodes.
+						if (node.isItIsAdjacent()) {
+							NetworkController.sendData(node.getId(), data);							
+						}
 					}
 				}
 				// Send DV packet
 				else {
-					Utils.printLog(3, "Ignoring packet from me to others... Not implemented yet.", TAG);
-//					data = "From:" + hostname + "\nType:DV\nLen:" + nodes.size() + "\n";
-//					for (Node node: nodes.values()) {
-//						data += node.getId() + ":" + node.getCost() + "\n";
-//					}
-//					for (Node node: nodes.values()) {
-//						NetworkController.sendData(node.getId(), data);
-//					}
+					data = "From:" + hostname + "\nType:DV\nLen:" + nodes.size() + "\n";
+					for (String destiny: packet.costs.keySet()) {
+						data += destiny + ":" + packet.costs.get(destiny) + "\n";
+					}
+					for (Node node: nodes.values()) {
+						// Only send to adjacent nodes.
+						if (node.isItIsAdjacent()) {
+							NetworkController.sendData(node.getId(), data);
+						}
+					}
 				}
 			}
+			
+
 			// PACKETS FROM NEIGHBORS TO ME
 			else {
 				if (packet.type.equals(RouterController.DV)) {
 					Utils.printLog(3, "Interpretando paquete tipo DV...", TAG);
-					for (String source: packet.costs.keySet()) {
-						currentCost = dvtable.get(source).get(packet.from).getCost();
-						newCost = dvtable.get(packet.from).get(packet.from).getCost() + packet.costs.get(source);
-						if (newCost < currentCost) {
-							Utils.printLog(3, "DVTable: Cambiando costo a " + source + ", de " + currentCost + " a " + newCost, TAG);
-							dvtable.get(source).get(packet.from).setCost(newCost);
+					for (String destiny: packet.costs.keySet()) {
+						// DV update to a known node
+						if (dvtable.containsKey(destiny)) {
+							currentCost = dvtable.get(destiny).get(packet.from).getCost();
+							newCost = dvtable.get(packet.from).get(packet.from).getCost() + packet.costs.get(destiny);
+							if (newCost < currentCost) {
+								Utils.printLog(3, "DVTable: Cambiando costo a " + destiny + ", de " + currentCost + " a " + newCost, TAG);
+								dvtable.get(destiny).get(packet.from).setCost(newCost);
+							}
+						}
+						// DV update to a unknown node
+						else {
+							// Add new node with INFINITY costs since itsn't a neighbor. Address isn't important.
+							nodes.put(destiny, new Node(destiny, INFINITY, "", false));
+							nodes.get(destiny).setReachedThrough(nodes.get(packet.from));
+							// Add a new row in DV table for new node
+							dvtable.put(destiny, new HashMap<String, Node>());
+							for (Node node: nodes.values()) {
+								if (!node.isItIsAdjacent()) {
+									continue;
+								}
+								// TODO: Verificar con Pablo Estrada
+								int aux = (node.getId().equals(packet.from)) ?
+									dvtable.get(packet.from).get(packet.from).getCost() + packet.costs.get(destiny)
+									: INFINITY;
+								dvtable.get(destiny).put(node.getId(), new Node(node.getId(), aux, node.getAddress(), false));
+							}
 						}
 					}
 					// Update forwarding table after changes applied
 					this.updateForwardingTable();
 				} else {
-					Utils.printLog(3, "Leyendo paquete tipo KEEP_ALIVE de " + packet.from + "...", TAG);
+					Utils.printLog(3, "Leyendo paquete tipo KEEP_ALIVE de " + packet.from + "... Not implemented yet.", TAG);
 				}
 			}
 		}
@@ -207,7 +242,7 @@ public class RouterController {
 	}
 	
 	private void printForwardingTable() {
-		for(Node node: this.nodes.values()) {
+		for(Node node: nodes.values()) {
 			System.out.print(
 				"[to: " + node.getId() +
 				", cost: " + node.getCost() +
@@ -218,8 +253,8 @@ public class RouterController {
 	
 	public void updateForwardingTable() {
 		Map<String, Node> cols;
-		for(String fila: this.dvtable.keySet()) {
-			cols = this.dvtable.get(fila);
+		for(String fila: dvtable.keySet()) {
+			cols = dvtable.get(fila);
 			Node through = null;
 			for (Node col: cols.values()) {
 				if (through == null) {
@@ -229,27 +264,28 @@ public class RouterController {
 				
 				if (col.getCost() < through.getCost()) {
 					through = col;
+					costChange = true;
 				}
 			}
 			
-			this.nodes.get(fila).setReachedThrough(through);
+			nodes.get(fila).setReachedThrough(nodes.get(through.getId()));
 		}
 	}
 	
-	public Map<String, String> getForwardingTable() {
-		Map<String, String> result = new HashMap<String, String>();
-		for (Node node: this.nodes.values()) {
-			result.put(node.getId(), node.getReachedThrough().getId());
-		}
-		
-		return result;
+	public Map<String, Node> getForwardingTable() {
+		return nodes;
 	}
 	
 	public static void considerSendingPackets() {
 		Utils.printLog(3, "Checking router status...", TAG);
 		if (costChange) {
-			Utils.printLog(3, "Cost change ocurred. No handler for this!", TAG);
-			// TODO: WTF
+			Utils.printLog(3, "Cost change ocurred. Building packet to send...", TAG);
+			Map<String, Integer> costs = new HashMap<String, Integer>();
+			for (Node node: nodes.values()) {
+				costs.put(node.getAddress(), node.getCost());
+			}
+			events.add(new Packet(hostname, DV, nodes.size(), costs));
+			costChange = false;
 		}
 		// SENDS KEEP ALIVES
 		else {

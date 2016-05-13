@@ -9,7 +9,7 @@ import router.RouterController;
 
 public class ConnectivityChecker implements Runnable {
 	
-	private String TAG = "ReconnectionChecker";
+	private String TAG = "RECONNECTION-CHECKER";
 
 	public ConnectivityChecker(){}
 	

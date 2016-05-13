@@ -5,11 +5,13 @@ public class Node {
 	private int cost;
 	private String address;
 	private Node reachedThrough;
+	private boolean itIsAdjacent;
 	
-	public Node(String id, int cost, String address) {
+	public Node(String id, int cost, String address, boolean itIsAdjacent) {
 		this.id = id;
 		this.cost = cost;
 		this.address = address;
+		this.itIsAdjacent = itIsAdjacent;
 		this.reachedThrough = null;
 	}
 
@@ -44,6 +46,14 @@ public class Node {
 	public void setReachedThrough(Node reachedThrough) {
 		this.reachedThrough = reachedThrough;
 		this.cost = reachedThrough.cost;
+	}
+
+	public boolean isItIsAdjacent() {
+		return itIsAdjacent;
+	}
+
+	public void setItIsAdjacent(boolean itIsAdjacent) {
+		this.itIsAdjacent = itIsAdjacent;
 	}
 
 	public String toString() {

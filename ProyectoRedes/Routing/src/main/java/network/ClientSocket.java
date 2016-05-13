@@ -4,7 +4,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -14,7 +13,7 @@ import main.Utils;
 public class ClientSocket implements Runnable{
 	
 	private String hostname = null;
-	
+	private int port = 0;
 	private Queue<String> dataQueue;
 	private Socket clientSocket = null;
 	protected String address = null;
@@ -28,27 +27,17 @@ public class ClientSocket implements Runnable{
     public ClientSocket(String address, int port, String hostname) {
     	this.address = address;
     	this.hostname = hostname;
+    	this.port = port;
     	
     	dataQueue = new LinkedList<String>();
-
-    	// Instantiate connection socket and output/input stream
-        try {
-        	clientSocket = new Socket(this.address, port);
-            output = new DataOutputStream(clientSocket.getOutputStream());
-            input = new DataInputStream(clientSocket.getInputStream());
-        } catch (Exception e) {
-        	Utils.printLog(1, "Attempt connection with '" + hostname + "' failed.", TAG);
-        	this.closeConnection();
-        	
-        	return;
-        }
-        
-        // Add new connection
-        Utils.printLog(3, "Client socket openned for '" + this.hostname + "'", TAG);
-        NetworkController.outputConnections.put(this.hostname, this);
     }
 
 	public void run() {
+		// Attempt to connect with host
+		if (!this.requestForConnection()) {
+			this.closeConnection();
+		}
+		
         // Login process: if FALSE, brook connection
 		if (!isStopped) {
 	        if (!login()) {
@@ -74,6 +63,25 @@ public class ClientSocket implements Runnable{
 				Utils.printLog(1, "Sending data to " + this.hostname + " failed. " + e.getMessage(), TAG);
 			}
 		}
+	}
+	
+	private boolean requestForConnection() {
+    	// Instantiate connection socket and output/input stream
+        try {
+        	clientSocket = new Socket(this.address, this.port);
+            output = new DataOutputStream(clientSocket.getOutputStream());
+            input = new DataInputStream(clientSocket.getInputStream());
+        } catch (Exception e) {
+        	Utils.printLog(1, "Attempt connection with '" + hostname + "' failed.", TAG);
+        	
+        	return false;
+        }
+        
+        // Add new connection
+        Utils.printLog(3, "Client socket openned for '" + this.hostname + "'", TAG);
+        NetworkController.outputConnections.put(this.hostname, this);
+        
+        return true;
 	}
 	
 	private boolean login() {
