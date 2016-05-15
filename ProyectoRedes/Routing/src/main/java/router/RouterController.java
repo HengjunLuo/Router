@@ -184,6 +184,7 @@ public class RouterController {
 						}
 						// DV update to a known node
 						if (dvtable.containsKey(destiny)) {
+							Utils.printLog(3, "DV update for known node.", TAG);
 							currentCost = dvtable.get(destiny).get(packet.from).getCost();
 							newCost = dvtable.get(packet.from).get(packet.from).getCost() + packet.costs.get(destiny);
 							if (newCost < currentCost) {
@@ -193,6 +194,7 @@ public class RouterController {
 						}
 						// DV update to a unknown node
 						else {
+							Utils.printLog(3, "DV update for unknown node.", TAG);
 							// Add new node with INFINITY costs since itsn't a neighbor. Address isn't important.
 							nodes.put(destiny, new Node(destiny, INFINITY, "", false));
 							nodes.get(destiny).setReachedThrough(nodes.get(packet.from));
@@ -220,7 +222,7 @@ public class RouterController {
 	}
 	
 	public static synchronized void receivePacket(Packet packet) {
-		Utils.printLog(3, "Queuing new packet received from '" + packet.from + "'", TAG);
+		Utils.printLog(3, "Queuing event for received packet from '" + packet.from + "'", TAG);
 		events.add(packet);
 	}
 

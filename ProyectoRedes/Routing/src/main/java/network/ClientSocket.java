@@ -126,7 +126,6 @@ public class ClientSocket implements Runnable{
 			// If the queue is not empty, send the packet at the head of queue.
 			try {
 				String data = dataQueue.poll();
-				Utils.printLog(3, this.hostname + ": Proceding to send data:\n" + data, TAG);
 				output.writeBytes(data);
 				Utils.printLog(3, this.hostname + ": Data sent successuflly:\n" + data, TAG);
 			} catch (IOException e) {
