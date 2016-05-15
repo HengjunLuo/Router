@@ -21,8 +21,8 @@ public class RouterController {
 	public static final int INFINITY = 99;
 	public static final String KEEP_ALIVE = "KeepAlive";
 	public static final String DV = "DV";
-	public static final int timeT = 30;
-	public static final int timeU = 90;
+	public static final int timeT = 15;
+	public static final int timeU = 45;
 	public static String hostname;
 	static boolean costChange = false;
 	static private String TAG = "ROUTER CONTROLLER";
@@ -148,14 +148,12 @@ public class RouterController {
 		int currentCost, newCost; 
 		
 		Utils.printLog(3, "RouterController: Starting main router controller.", TAG);
-		int i = 0;
 		while (true) {
 			if (events.isEmpty()) {
-				Utils.printLog(3, "Ningun evento diponible. Durmiendo por 10s.", TAG);
+				Utils.printLog(3, "No events to execute. Sleeping for 5s...", TAG);
 				try {
-					Thread.sleep(10000);
+					Thread.sleep(5000);
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				continue;
@@ -215,7 +213,7 @@ public class RouterController {
 					// Update forwarding table after changes applied
 					this.updateForwardingTable();
 				} else {
-					Utils.printLog(3, "Leyendo paquete tipo KEEP_ALIVE de " + packet.from + "... Not implemented yet.", TAG);
+					Utils.printLog(3, "Reading KEEP_ALIVE packet from " + packet.from + "... Not implemented yet.", TAG);
 				}
 			}
 		}

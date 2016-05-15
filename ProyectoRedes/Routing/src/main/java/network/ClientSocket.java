@@ -99,13 +99,12 @@ public class ClientSocket implements Runnable{
 
         // If logged successfully, start to sending data
 		while (!isStopped) {
-			// If the queue is empty, continue.
+			// If the queue is empty, sleep for 5s and continue.
 			if (dataQueue.isEmpty()) {
-				Utils.printLog(3, this.hostname + ": Cola vacia. Durmiendo por 10s", TAG);
+				Utils.printLog(3, this.hostname + ": Empty queue. Sleeping for 5s...", TAG);
 				try {
-					Thread.sleep(10000);
+					Thread.sleep(5000);
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				continue;
@@ -131,6 +130,7 @@ public class ClientSocket implements Runnable{
 				output.writeBytes(data);
 				Utils.printLog(3, this.hostname + ": Data sent successuflly:\n" + data, TAG);
 			} catch (IOException e) {
+				connected = false;
 				Utils.printLog(1, "Sending data to " + this.hostname + " failed. " + e.getMessage(), TAG);
 			}
 		}

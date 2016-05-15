@@ -56,6 +56,7 @@ public final class NetworkController implements Runnable{
 		}
 		this.threadPool.shutdown();
 		Utils.printLog(3, "Server Stopped.", TAG);
+		System.exit(0);
 	}
 
 	private synchronized boolean isStopped() {
@@ -63,11 +64,11 @@ public final class NetworkController implements Runnable{
 	}
 	
 	public synchronized void stop() {
-		this.isStopped = true;
 		try {
 			this.serverSocket.close();
+			this.isStopped = true;
 		} catch (IOException e) {
-			throw new RuntimeException("Error closing server", e);
+			throw new RuntimeException("Error closing server.", e);
 		}
 	}
 	
@@ -75,11 +76,10 @@ public final class NetworkController implements Runnable{
 		try {
 			this.serverSocket = new ServerSocket(this.serverPort);
 		} catch (IOException e) {
-			throw new RuntimeException("Cannot open port " + RouterController.PORT, e);
+			throw new RuntimeException("Cannot open port " + RouterController.PORT + ".", e);
 		}
 		Utils.printLog(3, "Server started. Listening...", TAG);
-	}
-	
+	}	
 	
 	public static synchronized void removeServerConnection(String host) {
 		if (inputConnections.containsKey(host)) {
@@ -94,14 +94,6 @@ public final class NetworkController implements Runnable{
 			outputConnections.remove(host);
 		} else {
 			Utils.printLog(2, "Trying to remove nonexistent output connection: '" + host + "'", TAG);
-		}
-	}
-	
-	public static synchronized void sendData(String host, String data) {
-		if (outputConnections.containsKey(host)) {
-			outputConnections.get(host).addData(data);
-		} else {
-			Utils.printLog(2, "Trying to send data to a disconnected node: '" + host + "'", TAG);
 		}
 	}
 	
@@ -148,8 +140,9 @@ public final class NetworkController implements Runnable{
 		long currentTime;
 		for (ServerRunnable listener: inputConnections.values()) {
 			currentTime = new Date().getTime();
-			if (currentTime - listener.getLastAlive() > RouterController.timeU) {
+			if (currentTime - listener.getLastAlive() > RouterController.timeU * 1000) {
 				Utils.printLog(2, "The '" + listener.getHost() + "' host has been dropped.", TAG);;
+				Utils.printLog(3, "Last conection was " + (currentTime - listener.getLastAlive()) + "s ago.", TAG);
 				// TODO: Remove this connection or set cost to INFINITY
 			} else {
 				Utils.printLog(3, "Host '" + listener.getHost() + "' keeps alive.", TAG);;
