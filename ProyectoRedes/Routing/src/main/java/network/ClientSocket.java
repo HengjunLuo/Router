@@ -14,7 +14,7 @@ public class ClientSocket implements Runnable{
 	
 	private String hostname = null;
 	private int port = 0;
-	private Queue<String> dataQueue;
+	private static Queue<String> dataQueue;
 	private Socket clientSocket = null;
 	protected String address = null;
     private DataOutputStream output = null;
@@ -101,6 +101,13 @@ public class ClientSocket implements Runnable{
 		while (!isStopped) {
 			// If the queue is empty, continue.
 			if (dataQueue.isEmpty()) {
+				Utils.printLog(3, this.hostname + ": Cola vacia. Durmiendo por 10s", TAG);
+				try {
+					Thread.sleep(10000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				continue;
 			}
 			
@@ -120,8 +127,9 @@ public class ClientSocket implements Runnable{
 			// If the queue is not empty, send the packet at the head of queue.
 			try {
 				String data = dataQueue.poll();
-				Utils.printLog(3, this.hostname +": Sending data: \n" + data, TAG);
+				Utils.printLog(3, this.hostname + ": Proceding to send data:\n" + data, TAG);
 				output.writeBytes(data);
+				Utils.printLog(3, this.hostname + ": Data sent successuflly:\n" + data, TAG);
 			} catch (IOException e) {
 				Utils.printLog(1, "Sending data to " + this.hostname + " failed. " + e.getMessage(), TAG);
 			}

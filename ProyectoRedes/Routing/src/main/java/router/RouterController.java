@@ -151,7 +151,7 @@ public class RouterController {
 		int i = 0;
 		while (true) {
 			if (events.isEmpty()) {
-				System.out.println("Ningun evento diponible. Durmiendo por 10s");
+				Utils.printLog(3, "Ningun evento diponible. Durmiendo por 10s.", TAG);
 				try {
 					Thread.sleep(10000);
 				} catch (InterruptedException e) {

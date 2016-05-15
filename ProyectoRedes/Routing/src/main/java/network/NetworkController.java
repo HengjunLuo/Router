@@ -119,14 +119,14 @@ public final class NetworkController implements Runnable{
 			String data = "";
 			// Send DV packet
 			if (packet.type.equals(RouterController.DV)) {
-				data = "From:" + packet.from + "\nType:DV\nLen:" + packet.len + "\n";
+				data = "From:" + packet.from + "\nType:" + packet.type + "\nLen:" + packet.len + "\n";
 				for (String destiny: packet.costs.keySet()) {
 					data += destiny + ":" + packet.costs.get(destiny) + "\n";
 				}
 			}
 			// Send KEEP_ALIVE packet
 			else {
-				data = "From:" + packet.from + "\nType:KEEP_ALIVE\n";
+				data = "From:" + packet.from + "\nType:" + packet.type + "\n";
 			}
 
 			Utils.printLog(3, "Queing new packet to send:\n" + packet.toString(), TAG);
