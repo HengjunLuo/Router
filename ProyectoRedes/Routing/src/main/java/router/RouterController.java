@@ -213,7 +213,7 @@ public class RouterController {
 						}
 					}
 					// Update forwarding table after changes applied
-					this.updateForwardingTable();
+					updateForwardingTable();
 				} else {
 					Utils.printLog(3, "Reading KEEP_ALIVE packet from " + packet.from + "... Not implemented yet.", TAG);
 				}
@@ -246,7 +246,7 @@ public class RouterController {
 		}
 	}
 	
-	public void updateForwardingTable() {
+	public static void updateForwardingTable() {
 		Utils.printLog(3, "Updating distance table...", TAG);
 		Map<String, Node> cols;
 		for(String fila: dvtable.keySet()) {
@@ -291,6 +291,38 @@ public class RouterController {
 			Utils.printLog(3, "No cost change. Event 'Send KEEP_ALIVE packets' added.", TAG);
 		}
 	}
+	
+	public static synchronized void disconectNode(String id) {
+		Utils.printLog(3, "Disconecting node '" + id + "'...", TAG);
+		
+		if (nodes.containsKey(id)) {
+			nodes.remove(id);
+		} else {
+			Utils.printLog(2, "Trying to remove a non existent node from nodes: " + id, TAG);
+		}
+		Utils.printLog(3, "Node '" + id + "' removed from nodes.", TAG);
+
+		// Deleting Node's column in DistanceTable.
+		for (Map<String, Node> rows: dvtable.values()) {
+			if (rows.containsKey(id)) {
+				rows.remove(id);
+				Utils.printLog(3, "Column for node '" + id + "' removed from dvtable.", TAG);
+			} else {
+				Utils.printLog(2, "Trying to remove a non existent column from dvtable: " + id, TAG);
+			}
+		}
+		
+		// Delete Node's row in DistanceTable
+		if (dvtable.containsKey(id)) {
+			dvtable.remove(id);
+			Utils.printLog(3, "Row for node '" + id + "' removed from dvtable.", TAG);
+		} else {
+			Utils.printLog(2, "Trying to remove a non existent row from dvtable: " + id, TAG);
+		}
+		
+		// Update forwarding table
+		updateForwardingTable();
+	} 
 	
 	
 }
