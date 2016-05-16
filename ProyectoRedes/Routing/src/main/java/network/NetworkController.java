@@ -150,13 +150,23 @@ public final class NetworkController implements Runnable{
 		long currentTime;
 		for (ServerRunnable listener: inputConnections.values()) {
 			currentTime = new Date().getTime();
-			if (currentTime - listener.getLastAlive() > RouterController.timeU * 1000) {
+			if (currentTime - listener.getLastAlive() > RouterController.TIME_U * 1000) {
 				Utils.printLog(2, "The '" + listener.getHost() + "' host has been dropped.", TAG);;
 				Utils.printLog(3, "Last conection was " + (currentTime - listener.getLastAlive()) + "s ago.", TAG);
 				// TODO: Remove this connection or set cost to INFINITY
 			} else {
-				Utils.printLog(3, "Host '" + listener.getHost() + "' keeps alive.", TAG);;
+				Utils.printLog(3, "Host '" + listener.getHost() + "' keeps alive.", TAG);
 			}
 		}
+	}
+	
+	public static synchronized void addOutputConnection(String hostname, ClientSocket clientSocket) {
+		outputConnections.put(hostname, clientSocket);
+		RouterController.addNeighborNode(hostname, clientSocket.getAddress());
+	}
+	
+	public static synchronized void addInputConnection(String hostname, ServerRunnable serverRunnable) {
+		inputConnections.put(hostname, serverRunnable);
+		RouterController.addNeighborNode(hostname, serverRunnable.getAddress());
 	}
 }

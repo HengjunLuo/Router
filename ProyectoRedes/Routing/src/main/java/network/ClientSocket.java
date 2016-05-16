@@ -16,7 +16,7 @@ public class ClientSocket implements Runnable{
 	private int port = 0;
 	private static Queue<String> dataQueue;
 	private Socket clientSocket = null;
-	protected String address = null;
+	private String address = null;
     private DataOutputStream output = null;
     private DataInputStream input = null;
     private boolean isStopped = false;
@@ -34,10 +34,10 @@ public class ClientSocket implements Runnable{
     	dataQueue = new LinkedList<String>();
     	
 		// Registering client socket
-		NetworkController.outputConnections.put(this.hostname, this);    	
+		NetworkController.addOutputConnection(this.hostname, this);
     }
 	
-	private boolean requestForConnection() {		
+	private boolean requestForConnection() {
     	// Instantiate connection socket and output/input stream
         try {
         	clientSocket = new Socket(this.address, this.port);
@@ -172,5 +172,9 @@ public class ClientSocket implements Runnable{
 	
 	public synchronized String getHost() {
 		return hostname;
+	}
+	
+	public synchronized String getAddress() {
+		return address;
 	}
 }

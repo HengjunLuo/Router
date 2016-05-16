@@ -68,7 +68,7 @@ public class ServerRunnable implements Runnable {
 		}
 		
 		// Registering listener socket
-		NetworkController.inputConnections.put(this.hostname, this);
+		NetworkController.addInputConnection(this.hostname, this);
 		
 		// Handshaking successful
 		Utils.printLog(3, "Returning WELCOME message to '" + this.hostname + "'", TAG);
@@ -276,5 +276,9 @@ public class ServerRunnable implements Runnable {
 	
 	public long getLastAlive() {
 		return this.lastAlive;
+	}
+	
+	public String getAddress() {
+		return this.address;
 	}
 }

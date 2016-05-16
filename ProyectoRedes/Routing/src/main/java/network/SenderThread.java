@@ -15,7 +15,7 @@ public class SenderThread implements Runnable {
 	public void run() {
 		// Initial sleep
 	    try {
-	        Thread.sleep(RouterController.timeT * 1000);
+	        Thread.sleep(RouterController.TIME_T * 1000);
 	    } catch (InterruptedException ex) {
 	    	Utils.printLog(2, ex.getMessage(), TAG);
 	    }
@@ -29,7 +29,7 @@ public class SenderThread implements Runnable {
     			}
     		},
     		0,
-    		RouterController.timeT * 1000
+    		RouterController.TIME_T * 1000
 	    ); 
     }
 }
