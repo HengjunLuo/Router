@@ -99,16 +99,6 @@ public class ClientSocket implements Runnable{
 
         // If logged successfully, start to sending data
 		while (!isStopped) {
-			// If the queue is empty, sleep for 5s and continue.
-			if (dataQueue.isEmpty()) {
-				Utils.printLog(3, this.hostname + ": Empty queue. Sleeping for 5s...", TAG);
-				try {
-					Thread.sleep(5000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-				continue;
-			}
 			
 			// Attempt to connect with host
 			if (!connected) {
@@ -121,6 +111,17 @@ public class ClientSocket implements Runnable{
 				if (!logged) {
 					continue;
 				}
+			}
+			
+			// If the queue is empty, sleep for 5s and continue.
+			if (dataQueue.isEmpty()) {
+				Utils.printLog(3, this.hostname + ": Empty queue. Sleeping for 5s...", TAG);
+				try {
+					Thread.sleep(5000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				continue;
 			}
 
 			// If the queue is not empty, send the packet at the head of queue.
