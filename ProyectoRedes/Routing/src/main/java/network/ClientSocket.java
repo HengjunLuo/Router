@@ -130,8 +130,8 @@ public class ClientSocket implements Runnable{
 				output.writeBytes(data);
 				Utils.printLog(3, this.hostname + ": Data sent successuflly:\n" + data, TAG);
 			} catch (IOException e) {
-				connected = false;
 				Utils.printLog(1, "Sending data to " + this.hostname + " failed. " + e.getMessage(), TAG);
+				closeConnection();
 			}
 		}
 	}
