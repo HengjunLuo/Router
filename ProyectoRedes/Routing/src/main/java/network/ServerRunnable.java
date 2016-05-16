@@ -97,6 +97,7 @@ public class ServerRunnable implements Runnable {
 			} catch (IOException e1) {
 				Utils.printLog(1, e1.getMessage(), TAG);
 				closeConnection();
+				continue;
 			}
 			splitted = data.split(":");
 
@@ -118,6 +119,7 @@ public class ServerRunnable implements Runnable {
 			} catch (IOException e1) {
 				Utils.printLog(1, e1.getMessage(), TAG);
 				closeConnection();
+				continue;
 			}
 			if (!data.trim().equals("Type:KeepAlive") && !data.trim().equals("Type:DV")) {
 				Utils.printLog(1, "Unknow type in received data from " + hostname, TAG);
@@ -142,6 +144,7 @@ public class ServerRunnable implements Runnable {
 				} catch (IOException e1) {
 					Utils.printLog(1, e1.getMessage(), TAG);
 					closeConnection();
+					continue;
 				}
 				splitted = data.split(":");
 				
@@ -168,6 +171,7 @@ public class ServerRunnable implements Runnable {
 					} catch (IOException e1) {
 						Utils.printLog(1, e1.getMessage(), TAG);
 						closeConnection();
+						continue;
 					}
 					splitted = data.split(":");
 
