@@ -84,6 +84,10 @@ public final class NetworkController implements Runnable{
 	public static synchronized void removeServerConnection(String host) {
 		if (inputConnections.containsKey(host)) {
 			inputConnections.remove(host);
+			if (outputConnections.containsKey(host)) {
+				outputConnections.get(host).closeConnection();
+				outputConnections.remove(host);
+			}
 		} else {
 			Utils.printLog(2, "Trying to remove nonexistent input connection: '" + host + "'", TAG);
 		}
@@ -92,6 +96,10 @@ public final class NetworkController implements Runnable{
 	public static synchronized void removeClientConnection(String host) {
 		if (outputConnections.containsKey(host)) {
 			outputConnections.remove(host);
+			if (inputConnections.containsKey(host)) {
+				inputConnections.get(host).closeConnection();	// Close its input connection.
+				inputConnections.remove(host);		// And remove its input connection too.
+			}
 		} else {
 			Utils.printLog(2, "Trying to remove nonexistent output connection: '" + host + "'", TAG);
 		}

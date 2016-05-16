@@ -150,13 +150,13 @@ public class ClientSocket implements Runnable{
 			if (clientSocket != null)
 				clientSocket.close();
 			
-			// Remove from network controller
-			NetworkController.removeClientConnection(this.hostname);
-			
 		} catch (IOException e) {
 			Utils.printLog(1, "Clossing connection with '" + this.hostname + "'.", TAG);
 			e.printStackTrace();
 		}
+		
+		// Remove from network controller
+		NetworkController.removeClientConnection(this.hostname);
 		
 		// Set flag to stopped
 		isStopped = true;
