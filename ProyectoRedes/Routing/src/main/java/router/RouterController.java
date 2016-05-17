@@ -97,11 +97,11 @@ public class RouterController implements Runnable {
 			}
 
 			packet = events.poll();
-			Utils.printLog(3, "Executing event of type " + packet.type + "...", TAG);
-			Utils.printLog(3, packet.toString(), TAG);
 			
 			// PACKETS FROM ME TO NEIGHBORS
 			if (packet.from.equals(hostname)) {
+				Utils.printLog(3, "Executing output event of type " + packet.type + "...", TAG);
+				Utils.printLog(3, packet.toString(), TAG);
 				for (Node node: nodes.values()) {
 					// Only send to adjacent nodes.
 					if (node.isItIsAdjacent()) {
@@ -112,6 +112,8 @@ public class RouterController implements Runnable {
 			
 			// PACKETS FROM NEIGHBORS TO ME
 			else {
+				Utils.printLog(3, "Executing input event of type " + packet.type + "...", TAG);
+				Utils.printLog(3, packet.toString(), TAG);
 				if (packet.type.equals(RouterController.DV)) {
 					for (String destiny: packet.costs.keySet()) {
 						// Obviar actualizaciones de DV hacia mi.

@@ -57,7 +57,7 @@ public class ClientSocket implements Runnable{
 	private boolean login() {
 		Utils.printLog(3, "Client login proccess with '" + this.hostname + "'...", TAG);
 		if (!connected) {
-			Utils.printLog(3, "Login attempt failed beacause socket is not connected.", TAG);
+			Utils.printLog(1, "Login attempt failed beacause socket is not connected.", TAG);
 			return false;
 		}
 		

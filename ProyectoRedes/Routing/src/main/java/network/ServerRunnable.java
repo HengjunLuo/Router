@@ -215,6 +215,7 @@ public class ServerRunnable implements Runnable {
 		
 		// No login for NULL connection.
 		if (!connected) {
+			Utils.printLog(1, "Login attempt failed beacause socket is not connected.", TAG);
 			return null;
 		}
 		
