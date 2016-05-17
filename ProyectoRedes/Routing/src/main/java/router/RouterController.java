@@ -21,7 +21,7 @@ public class RouterController implements Runnable {
 	public static final int INFINITY = 99;
 	public static final String KEEP_ALIVE = "KeepAlive";
 	public static final String DV = "DV";
-	public static final int TIME_T = 30;
+	public static final int TIME_T = 15;
 	public static final int TIME_U = 60;
 	public static final int DEFAULT_COST = 5;
 	
