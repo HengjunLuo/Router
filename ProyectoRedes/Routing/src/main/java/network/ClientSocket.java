@@ -116,8 +116,7 @@ public class ClientSocket implements Runnable{
 			
 	        // Login process: if FALSE, brook connection
 			if (!logged) {
-				logged = login();
-				if (!logged) {
+				if (!(logged = login())) {
 					continue;
 				}
 			}
@@ -147,14 +146,6 @@ public class ClientSocket implements Runnable{
 	
 	public synchronized void addData(String data) {
 		Utils.printLog(3, this.hostname + ": Queing data to send:\n" + data, TAG);
-		if (!connected) {
-			Utils.printLog(2, "Unable to queue data beacause isn't yet connected.", TAG);
-			return;
-		}
-		if (!logged) {
-			Utils.printLog(2, "Unable to queue data beacause isn't yet logged.", TAG);
-			return;
-		}
 		dataQueue.add(data);
 	}
 	
@@ -174,7 +165,7 @@ public class ClientSocket implements Runnable{
 		}
 		
 		// Remove from network controller
-		NetworkController.removeClientConnection(this.hostname);
+		NetworkController.removeOutputConnection(this.hostname);
 		
 		// Set flag to stopped
 		isStopped = true;

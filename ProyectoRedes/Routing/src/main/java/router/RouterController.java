@@ -101,7 +101,7 @@ public class RouterController implements Runnable {
 			
 			// PACKETS FROM ME TO NEIGHBORS
 			if (packet.from.equals(hostname)) {
-				Utils.printLog(3, "Executing output event of type " + packet.type + "...", TAG);
+				Utils.printLog(3, "Executing output event...", TAG);
 				Utils.printLog(3, packet.toString(), TAG);
 				for (Node node: nodes.values()) {
 					// Only send to adjacent nodes.

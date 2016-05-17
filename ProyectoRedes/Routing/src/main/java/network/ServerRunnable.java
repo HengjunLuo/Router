@@ -51,7 +51,7 @@ public class ServerRunnable implements Runnable {
 		int len, cost;
 		boolean error = false;
 		
-		Utils.printLog(3, "Attending user requests:", TAG);
+		Utils.printLog(3, "Attending user requests...", TAG);
 
 		// --------------------- HANDSHAKING ---------------------
 		this.hostname = login();
@@ -273,7 +273,7 @@ public class ServerRunnable implements Runnable {
 		}
 		
 		// Remove from network controller
-		NetworkController.removeServerConnection(this.hostname);
+		NetworkController.removeInputConnection(this.hostname);
 		Utils.printLog(1, "Server thread for '" + this.hostname +"' stopped.", TAG);
 		connected = false;
 	}

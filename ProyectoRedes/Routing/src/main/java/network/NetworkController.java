@@ -81,7 +81,7 @@ public final class NetworkController implements Runnable{
 		Utils.printLog(3, "Server started. Listening...", TAG);
 	}	
 	
-	public static synchronized void removeServerConnection(String host) {
+	public static synchronized void removeInputConnection(String host) {
 		if (inputConnections.containsKey(host)) {
 			inputConnections.remove(host);
 			if (outputConnections.containsKey(host)) {
@@ -94,7 +94,7 @@ public final class NetworkController implements Runnable{
 		}
 	}
 	
-	public static synchronized void removeClientConnection(String host) {
+	public static synchronized void removeOutputConnection(String host) {
 		if (outputConnections.containsKey(host)) {
 			outputConnections.remove(host);
 			if (inputConnections.containsKey(host)) {
@@ -131,7 +131,7 @@ public final class NetworkController implements Runnable{
 				data = "From:" + packet.from + "\nType:" + packet.type + "\n";
 			}
 
-			Utils.printLog(3, "Queing new packet to send:\n" + packet.toString(), TAG);
+//			Utils.printLog(3, "Queing new packet to send:\n" + packet.toString(), TAG);
 			outputConnections.get(host).addData(data);
 		} else {
 			Utils.printLog(2, "Trying to send data to a disconnected node: '" + host + "'", TAG);
