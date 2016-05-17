@@ -62,6 +62,78 @@ public class RouterController implements Runnable {
 		threadServer = new Thread(server);
 		threadServer.start();
 	}
+
+	private void setupInitialState() {
+		Utils.printLog(3, "Setting router initial state...", TAG);
+		// LOAD CONFIGURATION FILE
+		File configFile = new File("..\\Routing\\src\\main\\resources\\config.txt");
+		// MAC syntax for paths
+		if (System.getProperty("os.name").toLowerCase().contains("mac")) {
+			configFile = new File("../Routing/src/main/resources/config.txt");
+		}
+		if (!configFile.exists()) {
+			System.err.println("Unable to load configuration file.");
+			System.exit(0);
+		}
+		ArrayList<String> content = Utils.readFile(configFile);
+		
+		// CREATE CONNECTION TO HOSTS
+		String address, hostname, cost;
+		String[] splitted;
+		int aux = 0;
+		ClientSocket clientSocket;
+		
+		for (String line: content) {
+			// Validate syntax
+			splitted = line.split(" ");
+			if (splitted.length != 3) {
+				Utils.printLog(2, "Syntax error in config file. Skipping definition at line " + aux, TAG);
+				continue;
+			}
+			address = splitted[0];
+			hostname = splitted[1];
+			cost = splitted[2];
+			if (!Utils.validate(address) || hostname.equals("") || !cost.matches("[0-9]+")) {
+				Utils.printLog(2, "Syntax error in config file. Skipping definition at line " + aux, TAG);
+				continue;
+			}
+			
+			// Create connection if doesn't exist one yet
+			if (!NetworkController.existOutputConnection(hostname)) {
+				Utils.printLog(3, "RouterController: There is no an output connection to '" + hostname + "'. Trying to get one.", TAG);
+				clientSocket = new ClientSocket(address, PORT, hostname);
+				new Thread(clientSocket).start();
+			} else {
+				Utils.printLog(2, "Trying to duplicate output connection with '" + hostname + "'.", TAG);
+			}
+			
+			// Add new node as adjacent
+			nodes.put(hostname, new Node(hostname, Integer.parseInt(cost), address, true));
+			// Reached by itself since it's a neighbor
+			nodes.get(hostname).setReachedThrough(nodes.get(hostname));
+			aux++;
+		}
+		
+		// Build initial DV Table: All initial nodes are adjacent.
+		for (Node node1: nodes.values()) {
+			dvtable.put(node1.getId(), new HashMap<String, Node>());
+			for (Node node2: nodes.values()) {
+				aux = (node1.getId().equals(node2.getId())) ? node2.getCost() : INFINITY;
+				dvtable.get(node1.getId()).put(node2.getId(), new Node(node2.getId(), aux, node2.getAddress(), true));
+			}
+		}
+		
+		// Start thread for connectivity verification
+		Thread aliveThread = new Thread(new ConnectivityChecker());
+		aliveThread.start();
+		
+		// Start thread for considering sending DV or KEEP_ALIVE packet
+		Thread senderThread = new Thread(new SenderThread());
+		senderThread.start();
+		
+		System.out.println("Router initial state successfully configured.");
+		this.printDTable();
+	}
 	
 	/**
 	 * Main function: Router controller.
@@ -154,83 +226,12 @@ public class RouterController implements Runnable {
 					}
 					// Update forwarding table after changes applied
 					updateForwardingTable();
+					printDTable();
 				} else {
 					Utils.printLog(3, "Reading KEEP_ALIVE packet from " + packet.from + "... Not implemented yet.", TAG);
 				}
 			}
 		}
-	}
-
-	private void setupInitialState() {
-		Utils.printLog(3, "Setting router initial state...", TAG);
-		// LOAD CONFIGURATION FILE
-		File configFile = new File("..\\Routing\\src\\main\\resources\\config.txt");
-		// MAC syntax for paths
-		if (System.getProperty("os.name").toLowerCase().contains("mac")) {
-			configFile = new File("../Routing/src/main/resources/config.txt");
-		}
-		if (!configFile.exists()) {
-			System.err.println("Unable to load configuration file.");
-			System.exit(0);
-		}
-		ArrayList<String> content = Utils.readFile(configFile);
-		
-		// CREATE CONNECTION TO HOSTS
-		String address, hostname, cost;
-		String[] splitted;
-		int aux = 0;
-		ClientSocket clientSocket;
-		
-		for (String line: content) {
-			// Validate syntax
-			splitted = line.split(" ");
-			if (splitted.length != 3) {
-				Utils.printLog(2, "Syntax error in config file. Skipping definition at line " + aux, TAG);
-				continue;
-			}
-			address = splitted[0];
-			hostname = splitted[1];
-			cost = splitted[2];
-			if (!Utils.validate(address) || hostname.equals("") || !cost.matches("[0-9]+")) {
-				Utils.printLog(2, "Syntax error in config file. Skipping definition at line " + aux, TAG);
-				continue;
-			}
-			
-			// Create connection if doesn't exist one yet
-			if (!NetworkController.existOutputConnection(hostname)) {
-				Utils.printLog(3, "RouterController: There is no an output connection to '" + hostname + "'. Trying to get one.", TAG);
-				clientSocket = new ClientSocket(address, PORT, hostname);
-				new Thread(clientSocket).start();
-			} else {
-				Utils.printLog(2, "Trying to duplicate output connection with '" + hostname + "'.", TAG);
-			}
-			
-			// Add new node as adjacent
-			nodes.put(hostname, new Node(hostname, Integer.parseInt(cost), address, true));
-			// Reached by itself since it's a neighbor
-			nodes.get(hostname).setReachedThrough(nodes.get(hostname));
-			aux++;
-		}
-		
-		// Build initial DV Table: All initial nodes are adjacent.
-		for (Node node1: nodes.values()) {
-			dvtable.put(node1.getId(), new HashMap<String, Node>());
-			for (Node node2: nodes.values()) {
-				aux = (node1.getId().equals(node2.getId())) ? node2.getCost() : INFINITY;
-				dvtable.get(node1.getId()).put(node2.getId(), new Node(node2.getId(), aux, node2.getAddress(), true));
-			}
-		}
-		
-		// Start thread for connectivity verification
-		Thread aliveThread = new Thread(new ConnectivityChecker());
-		aliveThread.start();
-		
-		// Start thread for considering sending DV or KEEP_ALIVE packet
-		Thread senderThread = new Thread(new SenderThread());
-		senderThread.start();
-		
-		System.out.println("Router initial state successfully configured.");
-		this.printDTable();
 	}
 		
 	public static synchronized void receivePacket(Packet packet) {
@@ -259,7 +260,7 @@ public class RouterController implements Runnable {
 	}
 	
 	public static void updateForwardingTable() {
-		Utils.printLog(3, "Updating distance table...", TAG);
+		Utils.printLog(3, "Updating forwarding table...", TAG);
 		Map<String, Node> cols;
 		for(String fila: dvtable.keySet()) {
 			cols = dvtable.get(fila);
