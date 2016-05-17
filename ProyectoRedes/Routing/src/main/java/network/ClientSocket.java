@@ -49,7 +49,7 @@ public class ClientSocket implements Runnable{
         	return false;
         }
         
-        Utils.printLog(3, "Client socket openned for '" + this.hostname + "'", TAG);
+        Utils.printLog(3, "Output socket openned for '" + this.hostname + "'", TAG);
         
         return true;
 	}
@@ -58,18 +58,21 @@ public class ClientSocket implements Runnable{
 		Utils.printLog(3, "Client login proccess with '" + this.hostname + "'...", TAG);
 		if (!connected) {
 			Utils.printLog(1, "Login attempt failed beacause socket is not connected.", TAG);
+			
 			return false;
 		}
 		
     	String request = "From:" + RouterController.hostname + "\n" + "Type:HELLO\n";
-    	String response1="", response2="";
+    	String response1 = "", response2 = "";
     	
     	// Sending request message
     	try {
     		Utils.printLog(3, "Sending HELLO to '" + this.hostname + "'...", TAG);
 			output.writeBytes(request);
 		} catch (IOException e) {
-			Utils.printLog(1, "Trying to send HELLO request to '" + this.hostname + "'", TAG);
+			Utils.printLog(1, "Trying to send HELLO request to '" + this.hostname + "' failed.", TAG);
+			
+			return false;
 		}
 
     	// Reading WELCOME message
@@ -78,7 +81,9 @@ public class ClientSocket implements Runnable{
 			response1 = input.readLine();
 			response2 = input.readLine();
 		} catch (IOException e) {
-			Utils.printLog(1, "Trying to read WELCOME request from '" + this.hostname + "'", TAG);
+			Utils.printLog(1, "Trying to read WELCOME from '" + this.hostname + "' failed.", TAG);
+			
+			return false;
 		}
     	
     	if (response1.trim().equals("From:" + this.hostname) && response2.trim().equals("Type:WELCOME")) {
@@ -92,10 +97,14 @@ public class ClientSocket implements Runnable{
 
 	public void run() {
 		// Attempt to connect with host
-		connected = requestForConnection();
+		if (!(connected = requestForConnection())) {
+			this.closeConnection();
+		}
 		
         // Login process: if FALSE, brook connection
-		logged = login();
+		if (!(logged = login())) {
+			this.closeConnection();
+		}
 
         // If logged successfully, start to sending data
 		while (!isStopped) {

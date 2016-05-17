@@ -48,10 +48,11 @@ public class ServerRunnable implements Runnable {
 		String[] splitted;
 		Map<String, Integer> costs;
 		int len, cost;
+		boolean error = false;
 		
 		Utils.printLog(3, "Attending user requests:", TAG);
 
-		// ********* Handshaking *********
+		// --------------------- HANDSHAKING ---------------------
 		this.hostname = login();
 		if (this.hostname == null) {
 			Utils.printLog(2, "Handshaking error! Connection clossed.", TAG);
@@ -61,8 +62,8 @@ public class ServerRunnable implements Runnable {
 		}
 		
 		if (NetworkController.existInputConnection(this.hostname)) {
-			Utils.printLog(2, "Trying to duplicate connection. A listener for " +
-					this.hostname + " already exist.", TAG);
+			Utils.printLog(2, "Trying to duplicate connection. A listener for " + this.hostname + " already exist.", TAG);
+			closeConnection();
 			
 			return;
 		}
@@ -88,30 +89,32 @@ public class ServerRunnable implements Runnable {
 			new Thread(sender).start();
 		}
 
-		// ********* Listening *********
+		// --------------------- LISTENING ---------------------
 		Utils.printLog(3, "Starting connection listener for '" + this.hostname + "'...", TAG);
-		data = "";
+		from = data = "";
 		while (connected) {
-			try {
-				data = input.readLine();
-			} catch (IOException e1) {
-				Utils.printLog(1, e1.getMessage(), TAG);
-				closeConnection();
+			// Read until match 'From:Node'
+			while (true) {
+				try {
+					data = input.readLine();
+				} catch (IOException e1) {
+					Utils.printLog(1, e1.getMessage(), TAG);
+					closeConnection();
+					error = true;
+					break;
+				}
+				splitted = data.split(":");
+				if (splitted.length == 2) {
+					if (splitted[0].equals("From")) {
+						from = splitted[1].trim();
+						break;
+					}
+				}
+			}
+			// If previous loop arise in an error, connection was closed.
+			if (error) {
 				continue;
 			}
-			splitted = data.split(":");
-
-			if (splitted.length != 2) {
-				Utils.printLog(2, "Syntax error at line 1 from " + hostname, TAG);
-				continue;
-			}
-
-			if (!splitted[0].equals("From")) {
-				Utils.printLog(1, "Syntax error at line 1 from " + hostname, TAG);
-				continue;
-			}
-			
-			from = splitted[1].trim();
 			
 			// Second line
 			try {
@@ -122,7 +125,7 @@ public class ServerRunnable implements Runnable {
 				continue;
 			}
 			if (!data.trim().equals("Type:KeepAlive") && !data.trim().equals("Type:DV")) {
-				Utils.printLog(1, "Unknow type in received data from " + hostname, TAG);
+				Utils.printLog(1, "Unknow type in received data from '" + hostname + "'.", TAG);
 				continue;
 			}
 			
@@ -132,10 +135,8 @@ public class ServerRunnable implements Runnable {
 			
 			// Matching a KeepAlive packet
 			if (type.equals(RouterController.KEEP_ALIVE)) {
-				Utils.printLog(3, "New KEEP_ALIVE packet from '" + this.hostname + "'", TAG);
-				NetworkController.receivePacket(
-						new Packet(from, type)
-				);
+				Utils.printLog(3, "New KEEP_ALIVE packet from '" + this.hostname + "'.", TAG);
+				NetworkController.receivePacket(new Packet(from, type));
 			}
 			// Matching a DistanceVector packet
 			else {
@@ -149,51 +150,56 @@ public class ServerRunnable implements Runnable {
 				splitted = data.split(":");
 				
 				if (splitted.length != 2) {
-					Utils.printLog(2, "Syntax error at line 3 from " + this.hostname, TAG);
+					Utils.printLog(2, "Syntax error at line 3 in received data from '" + this.hostname + "'.", TAG);
 					continue;
 				}
 				if (!splitted[0].trim().equals("Len")) {
-					Utils.printLog(2, "Syntax error at line 3 from " + this.hostname, TAG);
+					Utils.printLog(2, "Syntax error at line 3 in received data from '" + this.hostname + "'.", TAG);
 					continue;
 				}
 				try {
 					len = Integer.parseInt(data.split(":")[1]);
 				} catch (NumberFormatException e) {
-					Utils.printLog(2, "Number format exception. Data recevide from " + this.hostname, TAG);
+					Utils.printLog(2, "Number format exception. Data recevide from '" + this.hostname + "'.", TAG);
 					continue;
 				}
 
 				// Parsing costs: <Destiny>:<cost>
 				costs = new HashMap<String, Integer>();
 				for (int i=0; i<len; i++) {
+					error = false;
 					try {
 						data = input.readLine();
 					} catch (IOException e1) {
 						Utils.printLog(1, e1.getMessage(), TAG);
 						closeConnection();
-						continue;
+						error = true;
+						break;
 					}
 					splitted = data.split(":");
 
 					if (splitted.length != 2) {
-						Utils.printLog(2, "Syntax error at line " + (4 + i)+  " from " + this.hostname, TAG);
+						Utils.printLog(2, "Syntax error at line " + (4 + i)+  " in received data from '" + this.hostname + "'", TAG);
 						continue;
 					}
 					
 					try {
 						cost = Integer.parseInt(splitted[1].trim());
 					} catch (NumberFormatException e) {
-						Utils.printLog(2, "Number format exception. Data recevide from " + this.hostname, TAG);
+						Utils.printLog(2, "Number format exception. Data recevide from '" + this.hostname + "'.", TAG);
 						continue;
 					}
 					
 					costs.put(splitted[0].trim(), cost);
 				}
 				
+				// If previous loop arise in an error, connection was closed.
+				if (error) {
+					continue;
+				}
+				
 				Utils.printLog(3, "New DV packet from '" + this.hostname + "'", TAG);
-				NetworkController.receivePacket(
-						new Packet(from, RouterController.DV, len, costs)
-				);
+				NetworkController.receivePacket(new Packet(from, RouterController.DV, len, costs));
 			}
 			
 			// Last time it was received a packet from this host.
@@ -267,7 +273,7 @@ public class ServerRunnable implements Runnable {
 		
 		// Remove from network controller
 		NetworkController.removeServerConnection(this.hostname);
-		Utils.printLog(1, "Client thread stopped.", TAG);
+		Utils.printLog(1, "Server thread for '" + this.hostname +"' stopped.", TAG);
 		connected = false;
 	}
 	

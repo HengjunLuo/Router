@@ -24,6 +24,7 @@ public class RouterController implements Runnable {
 	public static final int TIME_T = 15;
 	public static final int TIME_U = 45;
 	public static final int DEFAULT_COST = 5;
+	
 	public static String hostname;
 	static boolean costChange = false;
 	static private String TAG = "ROUTER CONTROLLER";
