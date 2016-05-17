@@ -66,7 +66,7 @@ public class Utils {
 	public static void printLog(int type, String error, String TAG) {
 		switch (type) {
 			case 1:
-				System.out.println("ERROR - " + TAG + ": " + error);
+				System.err.println("ERROR - " + TAG + ": " + error);
 				break;
 			case 2:
 				System.out.println("WARNING - " + TAG + ": " + error);

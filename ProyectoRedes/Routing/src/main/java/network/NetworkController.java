@@ -6,6 +6,7 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import router.Node;
 import router.RouterController;
 import main.Utils;
 
@@ -55,6 +56,7 @@ public final class NetworkController implements Runnable{
 		}
 		this.threadPool.shutdown();
 		Utils.printLog(3, "Server Stopped.", TAG);
+		System.exit(0);
 	}
 
 	private synchronized boolean isStopped() {
@@ -62,11 +64,11 @@ public final class NetworkController implements Runnable{
 	}
 	
 	public synchronized void stop() {
-		this.isStopped = true;
 		try {
 			this.serverSocket.close();
+			this.isStopped = true;
 		} catch (IOException e) {
-			throw new RuntimeException("Error closing server", e);
+			throw new RuntimeException("Error closing server.", e);
 		}
 	}
 	
@@ -74,29 +76,34 @@ public final class NetworkController implements Runnable{
 		try {
 			this.serverSocket = new ServerSocket(this.serverPort);
 		} catch (IOException e) {
-			throw new RuntimeException("Cannot open port " + RouterController.PORT, e);
+			throw new RuntimeException("Cannot open port " + RouterController.PORT + ".", e);
 		}
 		Utils.printLog(3, "Server started. Listening...", TAG);
-	}
-	
+	}	
 	
 	public static synchronized void removeServerConnection(String host) {
 		if (inputConnections.containsKey(host)) {
 			inputConnections.remove(host);
+			if (outputConnections.containsKey(host)) {
+				outputConnections.get(host).closeConnection();
+			}
+			// Try to disconnect this node
+			RouterController.disconectNode(host);
+		} else {
+			Utils.printLog(2, "Trying to remove nonexistent input connection: '" + host + "'", TAG);
 		}
 	}
 	
 	public static synchronized void removeClientConnection(String host) {
 		if (outputConnections.containsKey(host)) {
 			outputConnections.remove(host);
-		}
-	}
-	
-	public static synchronized void sendData(String host, String data) {
-		if (outputConnections.containsKey(host)) {
-			outputConnections.get(host).addData(data);
+			if (inputConnections.containsKey(host)) {
+				inputConnections.get(host).closeConnection();	// Close its input connection.
+			}
+			// Try to disconnect this node
+			RouterController.disconectNode(host);
 		} else {
-			Utils.printLog(2, "Trying to send data to a disconnected node: '" + host + "'", TAG);
+			Utils.printLog(2, "Trying to remove nonexistent output connection: '" + host + "'", TAG);
 		}
 	}
 	
@@ -105,7 +112,30 @@ public final class NetworkController implements Runnable{
 	 * @param data
 	 */
 	public static synchronized void receivePacket(Packet packet) {
-		RouterController.receiveData(packet);
+		Utils.printLog(3, "Receiving new packet:\n" + packet.toString(), TAG);
+		RouterController.receivePacket(packet);
+	}
+	
+	public static synchronized void sendPacket(String host, Packet packet) {
+		if (outputConnections.containsKey(host)) {
+			String data = "";
+			// Send DV packet
+			if (packet.type.equals(RouterController.DV)) {
+				data = "From:" + packet.from + "\nType:" + packet.type + "\nLen:" + packet.len + "\n";
+				for (String destiny: packet.costs.keySet()) {
+					data += destiny + ":" + packet.costs.get(destiny) + "\n";
+				}
+			}
+			// Send KEEP_ALIVE packet
+			else {
+				data = "From:" + packet.from + "\nType:" + packet.type + "\n";
+			}
+
+			Utils.printLog(3, "Queing new packet to send:\n" + packet.toString(), TAG);
+			outputConnections.get(host).addData(data);
+		} else {
+			Utils.printLog(2, "Trying to send data to a disconnected node: '" + host + "'", TAG);
+		}
 	}
 	
 	public static synchronized boolean existOutputConnection(String host) {
@@ -120,12 +150,23 @@ public final class NetworkController implements Runnable{
 		long currentTime;
 		for (ServerRunnable listener: inputConnections.values()) {
 			currentTime = new Date().getTime();
-			if (currentTime - listener.getLastAlive() > RouterController.timeU) {
+			if (currentTime - listener.getLastAlive() > RouterController.TIME_U * 1000) {
 				Utils.printLog(2, "The '" + listener.getHost() + "' host has been dropped.", TAG);;
+				Utils.printLog(3, "Last conection was " + (currentTime - listener.getLastAlive()) + "s ago.", TAG);
 				// TODO: Remove this connection or set cost to INFINITY
 			} else {
-				Utils.printLog(3, "Host '" + listener.getHost() + "' keeps alive.", TAG);;
+				Utils.printLog(3, "Host '" + listener.getHost() + "' keeps alive.", TAG);
 			}
 		}
+	}
+	
+	public static synchronized void addOutputConnection(String hostname, ClientSocket clientSocket) {
+		outputConnections.put(hostname, clientSocket);
+		RouterController.addNeighborNode(hostname, clientSocket.getAddress());
+	}
+	
+	public static synchronized void addInputConnection(String hostname, ServerRunnable serverRunnable) {
+		inputConnections.put(hostname, serverRunnable);
+		RouterController.addNeighborNode(hostname, serverRunnable.getAddress());
 	}
 }

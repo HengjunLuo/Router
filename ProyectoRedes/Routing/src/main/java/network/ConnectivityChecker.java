@@ -16,7 +16,7 @@ public class ConnectivityChecker implements Runnable {
 	public void run() {
 		// Initial sleep
 	    try {
-	        Thread.sleep(RouterController.timeU * 1000);
+	        Thread.sleep(RouterController.TIME_U * 1000);
 	    } catch (InterruptedException ex) {
 	    	Utils.printLog(2, ex.getMessage(), TAG);
 	    }
@@ -30,7 +30,7 @@ public class ConnectivityChecker implements Runnable {
     			}
     		},
     		0,
-    		RouterController.timeU * 1000
+    		RouterController.TIME_U * 1000
 	    ); 
     }
 }

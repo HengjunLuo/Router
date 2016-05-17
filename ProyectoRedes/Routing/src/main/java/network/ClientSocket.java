@@ -14,9 +14,9 @@ public class ClientSocket implements Runnable{
 	
 	private String hostname = null;
 	private int port = 0;
-	private Queue<String> dataQueue;
+	private static Queue<String> dataQueue;
 	private Socket clientSocket = null;
-	protected String address = null;
+	private String address = null;
     private DataOutputStream output = null;
     private DataInputStream input = null;
     private boolean isStopped = false;
@@ -34,10 +34,10 @@ public class ClientSocket implements Runnable{
     	dataQueue = new LinkedList<String>();
     	
 		// Registering client socket
-		NetworkController.outputConnections.put(this.hostname, this);    	
+		NetworkController.addOutputConnection(this.hostname, this);
     }
 	
-	private boolean requestForConnection() {		
+	private boolean requestForConnection() {
     	// Instantiate connection socket and output/input stream
         try {
         	clientSocket = new Socket(this.address, this.port);
@@ -57,7 +57,7 @@ public class ClientSocket implements Runnable{
 	private boolean login() {
 		Utils.printLog(3, "Client login proccess with '" + this.hostname + "'...", TAG);
 		if (!connected) {
-			Utils.printLog(3, "Login attempt failed beacause socket is not connected.", TAG);
+			Utils.printLog(1, "Login attempt failed beacause socket is not connected.", TAG);
 			return false;
 		}
 		
@@ -99,10 +99,6 @@ public class ClientSocket implements Runnable{
 
         // If logged successfully, start to sending data
 		while (!isStopped) {
-			// If the queue is empty, continue.
-			if (dataQueue.isEmpty()) {
-				continue;
-			}
 			
 			// Attempt to connect with host
 			if (!connected) {
@@ -116,19 +112,40 @@ public class ClientSocket implements Runnable{
 					continue;
 				}
 			}
+			
+			// If the queue is empty, sleep for 5s and continue.
+			if (dataQueue.isEmpty()) {
+				Utils.printLog(3, this.hostname + ": Empty queue. Sleeping for 5s...", TAG);
+				try {
+					Thread.sleep(5000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				continue;
+			}
 
 			// If the queue is not empty, send the packet at the head of queue.
 			try {
 				String data = dataQueue.poll();
-				Utils.printLog(3, "Sending to " + this.hostname + ": " + data , TAG);
 				output.writeBytes(data);
+				Utils.printLog(3, this.hostname + ": Data sent successuflly:\n" + data, TAG);
 			} catch (IOException e) {
 				Utils.printLog(1, "Sending data to " + this.hostname + " failed. " + e.getMessage(), TAG);
+				closeConnection();
 			}
 		}
 	}
 	
-	public void addData(String data) {
+	public synchronized void addData(String data) {
+		Utils.printLog(3, this.hostname + ": Queing data to send:\n" + data, TAG);
+		if (!connected) {
+			Utils.printLog(2, "Unable to queue data beacause isn't yet connected.", TAG);
+			return;
+		}
+		if (!logged) {
+			Utils.printLog(2, "Unable to queue data beacause isn't yet logged.", TAG);
+			return;
+		}
 		dataQueue.add(data);
 	}
 	
@@ -142,19 +159,23 @@ public class ClientSocket implements Runnable{
 			if (clientSocket != null)
 				clientSocket.close();
 			
-			// Remove from network controller
-			NetworkController.removeClientConnection(this.hostname);
-			
 		} catch (IOException e) {
 			Utils.printLog(1, "Clossing connection with '" + this.hostname + "'.", TAG);
 			e.printStackTrace();
 		}
 		
+		// Remove from network controller
+		NetworkController.removeClientConnection(this.hostname);
+		
 		// Set flag to stopped
 		isStopped = true;
 	}
 	
-	public String getHost() {
+	public synchronized String getHost() {
 		return hostname;
+	}
+	
+	public synchronized String getAddress() {
+		return address;
 	}
 }
