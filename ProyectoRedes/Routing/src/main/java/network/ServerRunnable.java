@@ -27,10 +27,11 @@ public class ServerRunnable implements Runnable {
 		
 		// Get remote IP
 		try {
-			this.address = clientSocket.getLocalAddress().getHostAddress();
+			this.address = clientSocket.getInetAddress().getHostAddress();
 		} catch (Exception e1) {
 			Utils.printLog(1, "Trying to get romote IP from " + hostname, TAG);
-			e1.printStackTrace();
+			Utils.printLog(1, e1.getMessage(), TAG);
+			System.exit(0);
 		}
 		
 		try {
