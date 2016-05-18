@@ -32,7 +32,7 @@ public class Packet {
 		if (type.equals(RouterController.DV)) {
 			output += "\tLen: " + len + "\n";
 			for (String node: costs.keySet()) {
-				output += "\t" + node + ":" + costs.get(node) + "\n";
+				output += "\t" + node + ": " + costs.get(node) + "\n";
 			}
 		}
 		
