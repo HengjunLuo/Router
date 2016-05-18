@@ -151,9 +151,7 @@ public class Mensajeria {
 				+ "\n."
 				+ "\nEOF";
 		frmProyectoRoute.getContentPane().setLayout(new BorderLayout(0, 0));
-		
-		
-		
+
 		final JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 		tabbedPane.setFont(new Font("Trebuchet MS", Font.PLAIN, 14));
 		frmProyectoRoute.getContentPane().add(tabbedPane);
