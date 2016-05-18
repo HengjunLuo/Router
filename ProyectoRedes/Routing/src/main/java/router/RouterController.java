@@ -81,7 +81,6 @@ public class RouterController implements Runnable {
 		String address, hostname, cost;
 		String[] splitted;
 		int aux = 0;
-		ClientSocket clientSocket;
 		
 		for (String line: content) {
 			// Validate syntax
@@ -101,7 +100,7 @@ public class RouterController implements Runnable {
 			// Create connection if doesn't exist one yet
 			if (!NetworkController.existOutputConnection(hostname)) {
 				Utils.printLog(3, "RouterController: There is no an output connection to '" + hostname + "'. Trying to get one.", TAG);
-				clientSocket = new ClientSocket(address, PORT, hostname);
+				ClientSocket clientSocket = new ClientSocket(address, PORT, hostname);
 				new Thread(clientSocket).start();
 			} else {
 				Utils.printLog(2, "Trying to duplicate output connection with '" + hostname + "'.", TAG);
