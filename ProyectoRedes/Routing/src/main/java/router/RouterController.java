@@ -21,8 +21,8 @@ public class RouterController implements Runnable {
 	public static final int INFINITY = 99;
 	public static final String KEEP_ALIVE = "KeepAlive";
 	public static final String DV = "DV";
-	public static final int TIME_T = 20;
-	public static final int TIME_U = 60;
+	public static final int TIME_T = 30;
+	public static final int TIME_U = 90;
 	public static final int DEFAULT_COST = 5;
 	
 	public static String hostname;
@@ -262,6 +262,7 @@ public class RouterController implements Runnable {
 	public static void updateForwardingTable() {
 		Utils.printLog(3, "Updating forwarding table...", TAG);
 		Map<String, Node> cols;
+		
 		for(String fila: dvtable.keySet()) {
 			cols = dvtable.get(fila);
 			Node through = null;
@@ -270,16 +271,17 @@ public class RouterController implements Runnable {
 					through = col;
 					continue;
 				}
-				
 				if (col.getCost() < through.getCost()) {
 					through = col;
-					costChange = true;
-					Utils.printLog(3, "Cost changed during DV update. Cost to '"
-							+ fila + "' is now " + col.getCost() + "'", TAG);
 				}
 			}
 			
-			nodes.get(fila).setReachedThrough(nodes.get(through.getId()));
+			// Check if path changes.
+			if (!through.getId().equals(nodes.get(fila).getReachedThrough().getId())) {
+				Utils.printLog(3, "Cost changed during DV update. Cost to '" + fila + "' is now " + through.getCost() + "'", TAG);
+				nodes.get(fila).setReachedThrough(nodes.get(through.getId()));
+				costChange = true;
+			}
 		}
 	}
 	
