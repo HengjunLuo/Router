@@ -239,8 +239,9 @@ public class RouterController implements Runnable {
 
 	private void printDTable() {
 		System.out.println("-------- DISTANCE TABLE --------");
-		for (Map<String, Node> cols: dvtable.values()) {
-			for (Node node: cols.values()) {
+		for (String fila: dvtable.keySet()) {
+			System.out.print(fila + ": ");
+			for (Node node: dvtable.get(fila).values()) {
 				System.out.print(node.toString());
 			}
 			System.out.println();
