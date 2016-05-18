@@ -268,7 +268,6 @@ public class RouterController implements Runnable {
 			for (Node col: cols.values()) {
 				if (through == null) {
 					through = col;
-					continue;
 				}
 				if (col.getCost() < through.getCost()) {
 					through = col;
@@ -344,6 +343,11 @@ public class RouterController implements Runnable {
 		if (!nodes.containsKey(id)) {
 			nodes.put(id, new Node(id, DEFAULT_COST, address, true));
 			nodes.get(id).setReachedThrough(nodes.get(id));	// Reached through itself
+			
+			// Add columns for each row in Distance Table 
+			for(Map<String, Node> fila: dvtable.values()) {
+				fila.put(id, new Node(id, DEFAULT_COST, address, true));
+			}
 		} else {
 			Utils.printLog(2, "Node '" + id + "' already exist in nodes.", TAG);
 			return;
