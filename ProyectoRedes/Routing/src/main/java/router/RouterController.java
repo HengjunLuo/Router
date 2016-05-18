@@ -225,6 +225,7 @@ public class RouterController implements Runnable {
 					// Update forwarding table after changes applied
 					updateForwardingTable();
 					printDTable();
+					printForwardingTable();
 				} else {
 					Utils.printLog(3, "Reading KEEP_ALIVE packet from " + packet.from + "... Not implemented yet.", TAG);
 				}
@@ -249,6 +250,7 @@ public class RouterController implements Runnable {
 	}
 	
 	private static void printForwardingTable() {
+		System.out.println("-------- FORWARDING TABLE --------");
 		for(Node node: nodes.values()) {
 			System.out.println(
 				"[to: " + node.getId() +
@@ -278,7 +280,6 @@ public class RouterController implements Runnable {
 			if (!through.getId().equals(nodes.get(fila).getReachedThrough().getId())) {
 				Utils.printLog(3, "Cost changed during DV update. Cost to '" + fila + "' is now " + through.getCost() + "'", TAG);
 				nodes.get(fila).setReachedThrough(nodes.get(through.getId()));
-				printForwardingTable();
 				costChange = true;
 			}
 		}
