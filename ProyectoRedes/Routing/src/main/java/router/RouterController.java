@@ -248,9 +248,9 @@ public class RouterController implements Runnable {
 		}
 	}
 	
-	private void printForwardingTable() {
+	private static void printForwardingTable() {
 		for(Node node: nodes.values()) {
-			System.out.print(
+			System.out.println(
 				"[to: " + node.getId() +
 				", cost: " + node.getCost() +
 				", through:" + node.getReachedThrough().getId() + "]"
@@ -258,7 +258,7 @@ public class RouterController implements Runnable {
 		}
 	}
 	
-	public static void updateForwardingTable() {
+	private static void updateForwardingTable() {
 		Utils.printLog(3, "Updating forwarding table...", TAG);
 		Map<String, Node> cols;
 		
@@ -279,6 +279,7 @@ public class RouterController implements Runnable {
 			if (!through.getId().equals(nodes.get(fila).getReachedThrough().getId())) {
 				Utils.printLog(3, "Cost changed during DV update. Cost to '" + fila + "' is now " + through.getCost() + "'", TAG);
 				nodes.get(fila).setReachedThrough(nodes.get(through.getId()));
+				printForwardingTable();
 				costChange = true;
 			}
 		}
