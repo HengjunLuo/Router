@@ -92,8 +92,8 @@ public class Mensajeria {
 				}
 			}
 		});
-		RouterController router = new RouterController();
-		router.startRouter();
+//		Thread router = new Thread(new RouterController());
+//		router.start();
 	}
 
 	/**
@@ -151,9 +151,7 @@ public class Mensajeria {
 				+ "\n."
 				+ "\nEOF";
 		frmProyectoRoute.getContentPane().setLayout(new BorderLayout(0, 0));
-		
-		
-		
+
 		final JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 		tabbedPane.setFont(new Font("Trebuchet MS", Font.PLAIN, 14));
 		frmProyectoRoute.getContentPane().add(tabbedPane);
@@ -178,13 +176,13 @@ public class Mensajeria {
 		nodos.toArray(nodosArray);
 		enviarPanel.setLayout(null);
 		
-		JLabel lblCuerpoDelMensaje_1 = new JLabel("Cuerpo del Mensaje:");
+		JLabel lblCuerpoDelMensaje_1 = new JLabel("Mensaje:");
 		lblCuerpoDelMensaje_1.setFont(new Font("Trebuchet MS", Font.BOLD, 12));
-		lblCuerpoDelMensaje_1.setBounds(250, 19, 203, 14);
+		lblCuerpoDelMensaje_1.setBounds(46, 341, 83, 14);
 		enviarPanel.add(lblCuerpoDelMensaje_1);
 		
 		JScrollPane msjNvoScrollPane = new JScrollPane();
-		msjNvoScrollPane.setBounds(250, 44, 280, 318);
+		msjNvoScrollPane.setBounds(144, 325, 395, 50);
 		enviarPanel.add(msjNvoScrollPane);
 		
 		final JTextArea mensajeTextArea = new JTextArea();
@@ -195,13 +193,13 @@ public class Mensajeria {
 		
 		JLabel lblEnviarA = new JLabel("Enviar a nodo:");
 		lblEnviarA.setFont(new Font("Trebuchet MS", Font.BOLD, 12));
-		lblEnviarA.setBounds(46, 19, 137, 14);
+		lblEnviarA.setBounds(46, 11, 137, 14);
 		enviarPanel.add(lblEnviarA);
 		
 		
 		
 		JScrollPane listScroller = new JScrollPane();
-		listScroller.setBounds(46, 44, 163, 161);
+		listScroller.setBounds(46, 36, 83, 278);
 		enviarPanel.add(listScroller);
 		
 		//System.out.println(nodosArray.length);
@@ -215,9 +213,18 @@ public class Mensajeria {
 		nodosList.setVisibleRowCount(-1);
 		listScroller.setViewportView(nodosList);
 		
+		JScrollPane msjsEnviadosScrollPane = new JScrollPane();
+		msjsEnviadosScrollPane.setBounds(144, 36, 395, 278);
+		enviarPanel.add(msjsEnviadosScrollPane);
+		
+		final JTextArea msjsEnviadosTextArea = new JTextArea();
+		msjsEnviadosTextArea.setEditable(false);
+		msjsEnviadosTextArea.setFont(new Font("Trebuchet MS", Font.PLAIN, 13));
+		msjsEnviadosScrollPane.setViewportView(msjsEnviadosTextArea);
+		
 		JButton btnEnviarMensaje = new JButton("Enviar Mensaje");
 		btnEnviarMensaje.setFont(new Font("Trebuchet MS", Font.BOLD, 12));
-		btnEnviarMensaje.setBounds(393, 373, 137, 23);
+		btnEnviarMensaje.setBounds(402, 386, 137, 23);
 		btnEnviarMensaje.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				String cuerpoMsj = mensajeTextArea.getText();
@@ -229,12 +236,15 @@ public class Mensajeria {
 						+ "\nMsg:"+ cuerpoMsj + 
 						"\nEOF";
 				System.out.println(mensajeEnviado);
+				msjsEnviadosTextArea.setText( msjsEnviadosTextArea.getText() + "Para " + para + ": " + cuerpoMsj + "\n"+
+				"-----------------------------------------------------------------------------\n");
 				/*AQUI LE TENEMOS QUE PASAR mensajeEnviado 
 				 * A LA CLASE DE FORWARDING PARA QUE ESTA 
 				 * LO MANDE A QUIEN CORRESPONDA*/
 			}
 		});
 		enviarPanel.add(btnEnviarMensaje);
+	
 		
 		JLabel recibidosLabel = new JLabel("Mensajes Recibidos");
 		recibidosLabel.setFont(new Font("Trebuchet MS", Font.BOLD, 12));
