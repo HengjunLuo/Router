@@ -14,10 +14,10 @@ public class ServerRunnable implements Runnable {
 	protected Socket clientSocket = null;
 	protected String address = null;
 	protected String hostname;
-	private BufferedReader input = null;
-	private PrintWriter output = null;
+	protected BufferedReader input = null;
+	protected PrintWriter output = null;
 	
-	static String TAG = "LISTENER";
+	protected String TAG = "LISTENER";
 	protected long lastAlive = 0;
 	protected boolean connected = false;
 	
@@ -215,7 +215,7 @@ public class ServerRunnable implements Runnable {
 	 * 			Null where login was wrong
 	 * @throws IOException
 	 */
-	public String login() {
+	private String login() {
 		Utils.printLog(3, "Login process...", TAG);
 		String request, hostname = null;
 		String[] splitted;

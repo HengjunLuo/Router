@@ -6,7 +6,6 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import router.Node;
 import router.RouterController;
 import main.Utils;
 
@@ -18,9 +17,9 @@ public final class NetworkController implements Runnable{
 	protected boolean isStopped = false;
 	protected Thread runningThread = null;
 	
-	static String TAG = "NETWORK CONTROLLER";
-	static Map<String, ServerRunnable> inputConnections;
-	static Map<String, ClientSocket> outputConnections;
+	protected static String TAG = "NETWORK CONTROLLER";
+	protected static Map<String, ServerRunnable> inputConnections;
+	protected static Map<String, ClientSocket> outputConnections;
 	
 	public NetworkController(int port, int nThreads) {
 
@@ -63,7 +62,7 @@ public final class NetworkController implements Runnable{
 		return this.isStopped;
 	}
 	
-	public synchronized void stop() {
+	private synchronized void stop() {
 		try {
 			this.serverSocket.close();
 			this.isStopped = true;

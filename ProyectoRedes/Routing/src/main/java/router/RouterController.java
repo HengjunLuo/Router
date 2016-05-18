@@ -26,12 +26,11 @@ public class RouterController implements Runnable {
 	public static final int DEFAULT_COST = 5;
 	
 	public static String hostname;
-	static boolean costChange = false;
-	static private String TAG = "ROUTER CONTROLLER";
+	private static boolean costChange = false;
+	private static String TAG = "ROUTER CONTROLLER";
 
-	NetworkController server;
-	Thread threadServer;
-	String setupFileName = "config.txt";
+	private NetworkController server;
+	private Thread threadServer;
 	
 	private static Queue<Packet> events;
 	private static Map<String, Map<String, Node>> dvtable;

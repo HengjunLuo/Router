@@ -12,18 +12,18 @@ import main.Utils;
 
 public class ClientSocket implements Runnable{
 	
-	private String hostname = null;
-	private int port = 0;
-	private static Queue<String> dataQueue;
-	private Socket clientSocket = null;
-	private String address = null;
-    private DataOutputStream output = null;
-    private DataInputStream input = null;
-    private boolean isStopped = false;
-    private boolean connected = false;
-    private boolean logged = false;
+	protected String hostname = null;
+	protected int port = 0;
+	protected Queue<String> dataQueue;
+	protected Socket clientSocket = null;
+	protected String address = null;
+    protected DataOutputStream output = null;
+    protected DataInputStream input = null;
+    protected boolean isStopped = false;
+    protected boolean connected = false;
+    protected boolean logged = false;
     
-    private static String TAG = "CLIENT SOCKET";
+    protected String TAG = "CLIENT SOCKET";
     
     
     public ClientSocket(String address, int port, String hostname) {
