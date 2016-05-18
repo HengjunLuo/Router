@@ -351,6 +351,9 @@ public class RouterController implements Runnable {
 		if (!dvtable.containsKey(id)) {
 			dvtable.put(id, new HashMap<String, Node>());
 			for (Node node: nodes.values()) {
+				if (!node.isItIsAdjacent()) {
+					continue;
+				}
 				int aux = (node.getId().equals(id)) ? DEFAULT_COST : INFINITY;
 				dvtable.get(id).put(node.getId(), new Node(node.getId(), aux, node.getAddress(), true));
 			}
