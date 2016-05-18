@@ -6,4 +6,12 @@
     <version>0.0.1-SNAPSHOT</version>
   </parent>
   <artifactId>Forwarding</artifactId>
+  
+  <dependencies>
+  	<dependency>
+  		<groupId>redes</groupId>
+  		<artifactId>Routing</artifactId>
+  		<version>0.0.1-SNAPSHOT</version>
+  	</dependency>
+  </dependencies>
 </project>
