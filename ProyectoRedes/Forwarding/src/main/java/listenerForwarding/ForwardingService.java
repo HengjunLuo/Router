@@ -26,7 +26,7 @@ public class ForwardingService implements Runnable {
     static boolean SendMessage(ForwarderMessage message){
         if (message.to.equalsIgnoreCase(Setup.ROUTER_NAME)) {
             // we are the target
-            Setup.println("<<Received Incoming Message to ME from " + message.from + ">>\n" + message.text + "\n");
+            Setup.println("<<Received Incoming Message to ME from " + message.from + ">>\n" + message.message + "\n");
             return true;
         }
         InetAddress addr = null;

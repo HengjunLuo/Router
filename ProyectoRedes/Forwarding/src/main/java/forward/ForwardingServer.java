@@ -11,7 +11,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import network.ClientSocket;
+import client.ClientSocket;
 import network.NetworkController;
 import network.Packet;
 import router.Node;
