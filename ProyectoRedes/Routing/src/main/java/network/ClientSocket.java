@@ -38,17 +38,31 @@ public class ClientSocket implements Runnable{
     }
 	
 	private boolean requestForConnection() {
-    	// Instantiate connection socket and output/input stream
-        try {
-        	clientSocket = new Socket(this.address, this.port);
-            output = new DataOutputStream(clientSocket.getOutputStream());
-            input = new DataInputStream(clientSocket.getInputStream());
-        } catch (Exception e) {
-        	Utils.printLog(1, "Attempt connection with '" + hostname + "' failed.", TAG);
-        	
-        	return false;
-        }
-        
+    	// Instantiate connection socket and output/input stream. If it fails, try again until 3 attempts.
+		int attempts  = 0;
+		while (true) {
+	        try {
+	        	clientSocket = new Socket(this.address, this.port);
+	            output = new DataOutputStream(clientSocket.getOutputStream());
+	            input = new DataInputStream(clientSocket.getInputStream());
+	            break;
+	        } catch (Exception e) {
+	        	Utils.printLog(1, "Attempt connection with '" + hostname + "' failed.", TAG);
+	        	// If it fails, sleep thread for 2 seconds and try again. 
+	        	try {
+					Thread.sleep(2000);
+				} catch (InterruptedException e1) {
+					e1.printStackTrace();
+				}
+	        	attempts++;
+	        	// 3 attempts to connect
+	        	if (attempts == 3) {
+	        		Utils.printLog(1, "Unable to connect to '" + this.hostname + "'. Tried for 3 times.", TAG);
+	        		return false;
+	        	}
+	        }
+		}
+      
         Utils.printLog(3, "Output socket openned for '" + this.hostname + "'", TAG);
         
         return true;
