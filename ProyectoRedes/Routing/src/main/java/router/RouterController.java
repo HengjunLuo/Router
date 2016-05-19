@@ -279,6 +279,7 @@ public class RouterController implements Runnable {
 			if (!through.equals(nodes.get(fila).getReachedThrough())) {
 				Utils.printLog(3, "Cost changed during DV update. Cost to '" + fila + "' is now " + min + "'", TAG);
 				nodes.get(fila).setReachedThrough(through);
+				nodes.get(fila).setCost(min);
 				costChange = true;
 			}
 		}
