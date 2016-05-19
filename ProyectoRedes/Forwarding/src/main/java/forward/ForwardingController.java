@@ -5,6 +5,8 @@ import java.net.*;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.Queue;
+import java.util.LinkedList;
 
 import router.Node;
 import network.ClientSocket;
@@ -55,8 +57,7 @@ public final class ForwardingController implements Runnable{
 			Utils.printLog(3, "\nNew client connection arrived:", TAG);
 			
 			// Start server listener for new node
-			this.threadPool.execute(new ForwardingServer(clientSocket));
-			
+			this.threadPool.execute(new ForwardingServer(clientSocket));	
 		}
 		this.threadPool.shutdown();
 		Utils.printLog(3, "Server Stopped.", TAG);

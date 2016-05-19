@@ -9,7 +9,9 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.Queue;
 
 import client.ClientSocket;
 import network.NetworkController;
@@ -33,11 +35,13 @@ public class ForwardingServer implements Runnable {
 	protected boolean connected = false;
 	public static final int PORT = 1981;
 	private String routerName;
+	private Queue queueMsg = new LinkedList();
 	
 	
 	public ForwardingServer(Socket clientSocket) {
 		this.clientSocket = clientSocket;
 		this.readAbsoluteHostname();
+		
 		// Get remote IP
 		try {
 			this.address = clientSocket.getLocalAddress().getHostAddress();
@@ -65,23 +69,19 @@ public class ForwardingServer implements Runnable {
 	
 		Utils.printLog(3, "Attending user requests:", TAG);
 		login();
-		
-		
 		// Busamos en la tabla de checha y le mando el destiny
 		// lo cual nos va devolver un hostname ( through ) 
 		getdestinyForwarderTable(destiny , adyacentNode);
 		
 		// this.destiny = through que nos devuelve la tabla de checha
-		
-		
+					
 		// this.message = message_local
 		
 		if(this.destiny.equals(this.routerName)){
 			// Enviar a sofi
-			
+						
 		}
 		else{
-		
 			// Create a new output connection for this user if doesn't exist.
 			if (!NetworkController.existOutputConnection(this.hostname)) {
 				Utils.printLog(3, "ServerRunnable: There is no an output connection to '" + this.hostname + "'. Proceeding to create one.", TAG);
@@ -89,9 +89,21 @@ public class ForwardingServer implements Runnable {
 				sender.addData(this.enteringRequest);
 				new Thread(sender).start();
 			}
-		
 		}
 		
+		if(!queueMsg.isEmpty()){
+			
+			String msg = (String) queueMsg.peek();
+			parseRequest(msg);
+			
+			
+			if (!NetworkController.existOutputConnection(this.hostname)) {
+				Utils.printLog(3, "ServerRunnable: There is no an output connection to '" + this.hostname + "'. Proceeding to create one.", TAG);
+				ClientSocket sender = new ClientSocket(this.address, this.PORT, this.hostname);
+				sender.addData(this.enteringRequest);
+				new Thread(sender).start();
+			}
+		}
 		
 	}
 	
@@ -219,5 +231,5 @@ public class ForwardingServer implements Runnable {
 	public String getAddress() {
 		return this.address;
 	}
-
 }
+
