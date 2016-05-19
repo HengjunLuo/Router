@@ -33,7 +33,7 @@ public class RouterController implements Runnable {
 	private Thread threadServer;
 	
 	private static Queue<Packet> events;
-	private static Map<String, Map<String, Node>> dvtable;
+	private static Map<String, Map<String, Integer>> dvtable;
 	private static Map<String, Node> nodes;
 	private boolean isStopped = false;
 
@@ -54,7 +54,7 @@ public class RouterController implements Runnable {
 			System.exit(0);
 		}
 		
-		dvtable = new HashMap<String, Map<String, Node>>();
+		dvtable = new HashMap<String, Map<String, Integer>>();
 		nodes = new HashMap<String, Node>();
 		
 		server = new NetworkController(PORT, NUM_THREADS);
@@ -108,16 +108,16 @@ public class RouterController implements Runnable {
 			// Add new node as adjacent
 			nodes.put(hostname, new Node(hostname, Integer.parseInt(cost), address, true));
 			// Reached by itself since it's a neighbor
-			nodes.get(hostname).setReachedThrough(nodes.get(hostname));
+			nodes.get(hostname).setReachedThrough(hostname);
 			aux++;
 		}
 		
 		// Build initial DV Table: All initial nodes are adjacent.
 		for (Node node1: nodes.values()) {
-			dvtable.put(node1.getId(), new HashMap<String, Node>());
+			dvtable.put(node1.getId(), new HashMap<String, Integer>());
 			for (Node node2: nodes.values()) {
 				aux = (node1.getId().equals(node2.getId())) ? node2.getCost() : INFINITY;
-				dvtable.get(node1.getId()).put(node2.getId(), new Node(node2.getId(), aux, node2.getAddress(), true));
+				dvtable.get(node1.getId()).put(node2.getId(), aux);
 			}
 		}
 		
@@ -195,11 +195,11 @@ public class RouterController implements Runnable {
 						// DV update to a known node
 						if (nodes.containsKey(destiny)) {
 							Utils.printLog(3, "DV update for known node.", TAG);
-							currentCost = dvtable.get(destiny).get(packet.from).getCost();
-							newCost = dvtable.get(packet.from).get(packet.from).getCost() + packet.costs.get(destiny);
+							currentCost = dvtable.get(destiny).get(packet.from);
+							newCost = dvtable.get(packet.from).get(packet.from) + packet.costs.get(destiny);
 							if (newCost < currentCost) {
 								Utils.printLog(3, "DVTable: Cambiando costo a " + destiny + ", de " + currentCost + " a " + newCost, TAG);
-								dvtable.get(destiny).get(packet.from).setCost(newCost);
+								dvtable.get(destiny).put(packet.from, newCost);
 							}
 						}
 						// DV update to a unknown node
@@ -207,18 +207,18 @@ public class RouterController implements Runnable {
 							Utils.printLog(3, "DV update for unknown node.", TAG);
 							// Add new node with INFINITY costs since itsn't a neighbor. Address isn't important.
 							nodes.put(destiny, new Node(destiny, INFINITY, "", false));
-							nodes.get(destiny).setReachedThrough(nodes.get(packet.from));
+							nodes.get(destiny).setReachedThrough(packet.from);
 							// Add a new row in DV table for new node
-							dvtable.put(destiny, new HashMap<String, Node>());
+							dvtable.put(destiny, new HashMap<String, Integer>());
 							for (Node node: nodes.values()) {
 								if (!node.isItIsAdjacent()) {
 									continue;
 								}
 								// TODO: Verificar con Pablo Estrada
 								int aux = (node.getId().equals(packet.from)) ?
-									dvtable.get(packet.from).get(packet.from).getCost() + packet.costs.get(destiny)
+									dvtable.get(packet.from).get(packet.from) + packet.costs.get(destiny)
 									: INFINITY;
-								dvtable.get(destiny).put(node.getId(), new Node(node.getId(), aux, node.getAddress(), false));
+								dvtable.get(destiny).put(node.getId(), aux);
 							}
 						}
 					}
@@ -240,10 +240,10 @@ public class RouterController implements Runnable {
 
 	private void printDTable() {
 		System.out.println("-------- DISTANCE TABLE --------");
-		for (String fila: dvtable.keySet()) {
-			System.out.print(fila + ": ");
-			for (Node node: dvtable.get(fila).values()) {
-				System.out.print(node.toString());
+		for (String row: dvtable.keySet()) {
+			System.out.print(row + ": ");
+			for (String column: dvtable.get(row).keySet()) {
+				System.out.print("[" + column + ":" + dvtable.get(row).get(column) + "]");
 			}
 			System.out.println();
 		}
@@ -255,31 +255,30 @@ public class RouterController implements Runnable {
 			System.out.println(
 				"[to: " + node.getId() +
 				", cost: " + node.getCost() +
-				", through:" + node.getReachedThrough().getId() + "]"
+				", through:" + node.getReachedThrough() + "]"
 			);
 		}
 	}
 	
 	private static void updateForwardingTable() {
 		Utils.printLog(3, "Updating forwarding table...", TAG);
-		Map<String, Node> cols;
+		Map<String, Integer> cols;
 		
 		for(String fila: dvtable.keySet()) {
 			cols = dvtable.get(fila);
-			Node through = null;
-			for (Node col: cols.values()) {
-				if (through == null) {
-					through = col;
-				}
-				if (col.getCost() < through.getCost()) {
+			int min = INFINITY;
+			String through = "";
+			for (String col: cols.keySet()) {
+				if (cols.get(col) < min) {
+					min = cols.get(col);
 					through = col;
 				}
 			}
 			
 			// Check if path changes.
-			if (!through.getId().equals(nodes.get(fila).getReachedThrough().getId())) {
-				Utils.printLog(3, "Cost changed during DV update. Cost to '" + fila + "' is now " + through.getCost() + "'", TAG);
-				nodes.get(fila).setReachedThrough(nodes.get(through.getId()));
+			if (!through.equals(nodes.get(fila).getReachedThrough())) {
+				Utils.printLog(3, "Cost changed during DV update. Cost to '" + fila + "' is now " + min + "'", TAG);
+				nodes.get(fila).setReachedThrough(through);
 				costChange = true;
 			}
 		}
@@ -318,7 +317,7 @@ public class RouterController implements Runnable {
 		}
 
 		// Deleting Node's column in DistanceTable.
-		for (Map<String, Node> rows: dvtable.values()) {
+		for (Map<String, Integer> rows: dvtable.values()) {
 			if (rows.containsKey(id)) {
 				rows.remove(id);
 				Utils.printLog(3, "Column for node '" + id + "' removed from dvtable.", TAG);
@@ -343,11 +342,11 @@ public class RouterController implements Runnable {
 		// Trying to add this node to nodes.
 		if (!nodes.containsKey(id)) {
 			nodes.put(id, new Node(id, DEFAULT_COST, address, true));
-			nodes.get(id).setReachedThrough(nodes.get(id));	// Reached through itself
+			nodes.get(id).setReachedThrough(id);	// Reached through itself
 			
 			// Add columns for each row in Distance Table 
-			for(Map<String, Node> fila: dvtable.values()) {
-				fila.put(id, new Node(id, DEFAULT_COST, address, true));
+			for(Map<String, Integer> fila: dvtable.values()) {
+				fila.put(id, INFINITY);
 			}
 		} else {
 			Utils.printLog(2, "Node '" + id + "' already exist in nodes.", TAG);
@@ -356,13 +355,13 @@ public class RouterController implements Runnable {
 		
 		// Trying to add this node in distance table.
 		if (!dvtable.containsKey(id)) {
-			dvtable.put(id, new HashMap<String, Node>());
+			dvtable.put(id, new HashMap<String, Integer>());
 			for (Node node: nodes.values()) {
 				if (!node.isItIsAdjacent()) {
 					continue;
 				}
 				int aux = (node.getId().equals(id)) ? DEFAULT_COST : INFINITY;
-				dvtable.get(id).put(node.getId(), new Node(node.getId(), aux, node.getAddress(), true));
+				dvtable.get(id).put(node.getId(), aux);
 			}
 		} else {
 			Utils.printLog(2, "Node '" + id + "' already has a row in dvtable.", TAG);
