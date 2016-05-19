@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.LinkedList;
 import java.util.Queue;
-
+import forward.ForwardingController;
 
 import main.Utils;
 
@@ -34,7 +34,7 @@ public class ClientSocket implements Runnable{
     	dataQueue = new LinkedList<String>();
     	
 		// Registering client socket
-		//ForwardingController.addOutputConnection(hostname, clientSocket);
+		ForwardingController.addOutputConnection(hostname, this);
     }
 	
 	private boolean requestForConnection() {

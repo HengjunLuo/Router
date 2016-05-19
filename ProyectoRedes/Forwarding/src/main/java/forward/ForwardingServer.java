@@ -13,12 +13,15 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
 
+import javax.swing.text.html.HTMLDocument.Iterator;
+
 import client.ClientSocket;
 import network.NetworkController;
 import network.Packet;
 import router.Node;
 import router.RouterController;
 import main.Utils;
+import static router.RouterController.nodes;
 
 public class ForwardingServer implements Runnable {
 	protected Socket clientSocket = null;
@@ -36,11 +39,13 @@ public class ForwardingServer implements Runnable {
 	public static final int PORT = 1981;
 	private String routerName;
 	private Queue queueMsg = new LinkedList();
+	public static Map<String, Node> FinDestiny;
 	
 	
 	public ForwardingServer(Socket clientSocket) {
 		this.clientSocket = clientSocket;
 		this.readAbsoluteHostname();
+		
 		
 		// Get remote IP
 		try {
@@ -60,9 +65,10 @@ public class ForwardingServer implements Runnable {
 		connected = true;
 	}
 	
-	public void getdestinyForwarderTable(String toHostname, Node throughnode){
-		
-		 //Map<toHostname, throughnode> getForwardingTable();
+	public String getThrougNode(String toHostname){
+		this.FinDestiny = nodes;
+		String throughAux = FinDestiny.get(toHostname).getReachedThrough();
+		return throughAux;
 	}
 	
 	public void run() {
@@ -71,35 +77,38 @@ public class ForwardingServer implements Runnable {
 		login();
 		// Busamos en la tabla de checha y le mando el destiny
 		// lo cual nos va devolver un hostname ( through ) 
-		getdestinyForwarderTable(destiny , adyacentNode);
+		String finalDest = getThrougNode(destiny);
 		
 		// this.destiny = through que nos devuelve la tabla de checha
 					
-		// this.message = message_local
 		
-		if(this.destiny.equals(this.routerName)){
+		// this.message = message_local
+		if(finalDest.equals(this.routerName)){
 			// Enviar a sofi
 						
 		}
 		else{
 			// Create a new output connection for this user if doesn't exist.
-			if (!NetworkController.existOutputConnection(this.hostname)) {
-				Utils.printLog(3, "ServerRunnable: There is no an output connection to '" + this.hostname + "'. Proceeding to create one.", TAG);
-				ClientSocket sender = new ClientSocket(this.address, this.PORT, this.hostname);
+			if (!NetworkController.existOutputConnection(finalDest)) {
+				Utils.printLog(3, "ServerRunnable: There is no an output connection to '" + finalDest + "'. Proceeding to create one.", TAG);
+				ClientSocket sender = new ClientSocket(this.address, this.PORT, finalDest);
 				sender.addData(this.enteringRequest);
 				new Thread(sender).start();
 			}
 		}
+		
+		
 		
 		if(!queueMsg.isEmpty()){
 			
 			String msg = (String) queueMsg.peek();
 			parseRequest(msg);
 			
-			
+			String des = getThrougNode(destiny );
+	
 			if (!NetworkController.existOutputConnection(this.hostname)) {
 				Utils.printLog(3, "ServerRunnable: There is no an output connection to '" + this.hostname + "'. Proceeding to create one.", TAG);
-				ClientSocket sender = new ClientSocket(this.address, this.PORT, this.hostname);
+				ClientSocket sender = new ClientSocket(this.address, this.PORT, des);
 				sender.addData(this.enteringRequest);
 				new Thread(sender).start();
 			}
@@ -136,11 +145,14 @@ public class ForwardingServer implements Runnable {
 			
 			if (splitted.length != 2) {
 				System.out.println("La primera línea del formato del mensaje no esta correcto");
+				closeConnection();
+				
 			}
 			if (splitted[0].trim().equals("From")) {
 				hostname = splitted[1].trim();
 			}else{
 				System.out.println("La palabra From no existe en el mensaje");
+				closeConnection();
 			}
 			
 			// Second line
@@ -149,11 +161,13 @@ public class ForwardingServer implements Runnable {
 			
 			if (splitted.length != 2) {
 				System.out.println("El formato de la segunda línea no es el correcto");
+				closeConnection();
 			}
 			if (splitted[0].trim().equals("To")) {
 				destiny = splitted[1].trim();
 			}else{
 				System.out.println("No existe To en la segunda línea");
+				closeConnection();
 			}
 			
 			// Third line

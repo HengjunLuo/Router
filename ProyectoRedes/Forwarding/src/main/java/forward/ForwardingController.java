@@ -5,15 +5,18 @@ import java.net.*;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Queue;
 import java.util.LinkedList;
 
 import router.Node;
-import network.ClientSocket;
+import client.ClientSocket;
 import network.Packet;
 import router.RouterController;
 import listenerForwarding.ForwarderMessage;
 import main.Utils;
+
 
 public final class ForwardingController implements Runnable{
 
@@ -22,6 +25,8 @@ public final class ForwardingController implements Runnable{
 	protected ServerSocket serverSocket = null;
 	protected boolean isStopped = false;
 	protected Thread runningThread = null;
+	protected String hostname;
+	private static Map<String, Node> nodes;
 	
 	
 	static String TAG = "FORWARDING CONTROLLER";
@@ -164,7 +169,18 @@ public final class ForwardingController implements Runnable{
 	
 	public static synchronized void addOutputConnection(String hostname, ClientSocket clientSocket) {
 		outputConnections.put(hostname, clientSocket);
-		RouterController.addNeighborNode(hostname, clientSocket.getAddress());
+		addNeighborNode(hostname, clientSocket.getAddress());
+	}
+	
+	public static synchronized void addNeighborNode(String id, String address) {
+		// Trying to add this node to nodes.
+		if (!nodes.containsKey(id)) {
+			
+		} else {
+			Utils.printLog(2, "Node '" + id + "' already exist in nodes.", TAG);
+			return;
+		}
+		
 	}
 	
 	public static synchronized void addInputConnection(String hostname, ForwardingServer forwardingServer) {
