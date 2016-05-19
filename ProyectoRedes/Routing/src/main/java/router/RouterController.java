@@ -275,8 +275,11 @@ public class RouterController implements Runnable {
 				}
 			}
 			
+			int minAux = nodes.get(fila).getCost();
+			String throughAux = nodes.get(fila).getReachedThrough();
+			
 			// Check if path changes.
-			if (!through.equals(nodes.get(fila).getReachedThrough())) {
+			if (min != minAux || !through.equals(throughAux)) {
 				Utils.printLog(3, "Cost changed during DV update. Cost to '" + fila + "' is now " + min + "'", TAG);
 				nodes.get(fila).setReachedThrough(through);
 				nodes.get(fila).setCost(min);
