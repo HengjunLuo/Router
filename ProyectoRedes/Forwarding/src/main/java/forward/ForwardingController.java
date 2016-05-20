@@ -27,15 +27,21 @@ public final class ForwardingController implements Runnable{
 	protected String hostname;
 	private static Map<String, Node> nodes;
 	
+	private Queue queueMsg = new LinkedList();
+	private Queue QueueEnteringM = new LinkedList();
+	
 	
 	static String TAG = "FORWARDING CONTROLLER";
 	static Map<String, ForwardingServer> inputConnections;
 	static Map<String, ClientSocket> outputConnections;
+
+	
 	
 	public ForwardingController(int port, int nThreads) {
 
 		this.serverPort = port;
 		this.threadPool = Executors.newFixedThreadPool(nThreads);
+		
 		
 		inputConnections = new HashMap<String, ForwardingServer>();
 		outputConnections = new HashMap<String, ClientSocket>();
@@ -61,11 +67,21 @@ public final class ForwardingController implements Runnable{
 			Utils.printLog(3, "\nNew client connection arrived:", TAG);
 			
 			// Start server listener for new node
+
 			this.threadPool.execute(new ForwardingServer(clientSocket));	
 		}
 		this.threadPool.shutdown();
 		Utils.printLog(3, "Server Stopped.", TAG);
 		System.exit(0);
+	}
+
+	
+	public void getsendQueue(String msm){
+	//	ForwardingServer.sendQueue(msm);
+	}
+	
+	public void getqueueMessage(String msj){
+		
 	}
 
 	private synchronized boolean isStopped() {

@@ -37,8 +37,8 @@ public class ForwardingServer implements Runnable {
 	protected boolean connected = false;
 	public static final int PORT = 1981;
 	private String routerName;
-	private Queue queueMsg = new LinkedList();
-	public Queue QueueEnteringM = new LinkedList();
+	private Queue<String> queueMsg = new LinkedList<String>();
+	private Queue<String> QueueEnteringM = new LinkedList<String>();
 	public static Map<String, Node> FinDestiny;
 	
 	
@@ -122,7 +122,7 @@ public class ForwardingServer implements Runnable {
 		
 	}
 	
-	public void sendQueue(String msm){
+	private void sendQueue(String msm){
 		QueueEnteringM.add(msm);
 	}
 	
