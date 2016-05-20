@@ -38,6 +38,7 @@ public class ForwardingServer implements Runnable {
 	public static final int PORT = 1981;
 	private String routerName;
 	private Queue queueMsg = new LinkedList();
+	public Queue QueueEnteringM = new LinkedList();
 	public static Map<String, Node> FinDestiny;
 	
 	
@@ -76,7 +77,7 @@ public class ForwardingServer implements Runnable {
 	
 	
 	public void run() {
-	
+	 
 		Utils.printLog(3, "Attending user requests:", TAG);
 		login();
 		
@@ -90,7 +91,7 @@ public class ForwardingServer implements Runnable {
 		
 		if(finalDest.equals(this.routerName)){
 			// Enviar a sofi
-			
+			sendQueue(enteringRequest);
 						
 		}
 		else{
@@ -103,11 +104,10 @@ public class ForwardingServer implements Runnable {
 			}
 		}
 		
-		// 
 		
 		if(!queueMsg.isEmpty()){
 			
-			String msg = (String) queueMsg.peek();
+			String msg = (String) queueMsg.poll();
 			parseRequest(msg);
 			
 			String des = getThrougNode(destiny );
@@ -120,6 +120,14 @@ public class ForwardingServer implements Runnable {
 			}
 		}
 		
+	}
+	
+	public void sendQueue(String msm){
+		QueueEnteringM.add(msm);
+	}
+	
+	public void queueMessage(String msj){
+		queueMsg.add(msj);
 	}
 	
     private void readAbsoluteHostname(){
