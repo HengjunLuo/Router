@@ -94,6 +94,8 @@ public class ClientSocket implements Runnable{
     		Utils.printLog(3, "Trying to read WELCOME from '" + this.hostname + "'...", TAG);
 			response1 = input.readLine();
 			response2 = input.readLine();
+//			System.out.println("Respuesta1: " + response1);
+//			System.out.println("Respuesta2: " + response2);
 		} catch (IOException e) {
 			Utils.printLog(1, "Trying to read WELCOME from '" + this.hostname + "' failed.", TAG);
 			
