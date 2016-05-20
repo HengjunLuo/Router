@@ -5,8 +5,6 @@ import java.awt.EventQueue;
 import javax.swing.JFrame;
 import javax.swing.JTabbedPane;
 import java.awt.BorderLayout;
-import java.awt.Dimension;
-
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JLabel;
@@ -15,7 +13,6 @@ import javax.swing.JTextArea;
 import javax.swing.JButton;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.nio.channels.Pipe.SinkChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -23,9 +20,8 @@ import java.util.Map;
 import java.util.Queue;
 import java.awt.event.ActionEvent;
 import javax.swing.ListSelectionModel;
-import javax.swing.table.DefaultTableModel;
-
-import router.RouterController;
+//import router.RouterController;
+import forward.ForwardingController;
 import java.awt.Font;
 public class Mensajeria {
 
@@ -289,14 +285,15 @@ public class Mensajeria {
 		ingresoManualPanel.add(forwardScrollPane);
 		
 		final JTextArea tablaForwardTextArea = new JTextArea();
+		tablaForwardTextArea.setEditable(false);
 		tablaForwardTextArea.setFont(new Font("Trebuchet MS", Font.PLAIN, 13));
 		tablaForwardTextArea.setBounds(0, 0, 4, 22);
 		forwardScrollPane.setViewportView(tablaForwardTextArea);
 		
-		JButton btnIngresarTabla = new JButton("Ingresar Tabla");
+		JButton btnIngresarTabla = new JButton("Mostrar Tabla");
 		btnIngresarTabla.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				if(tablaForwardTextArea.getText()!=null){
+				/*if(tablaForwardTextArea.getText()!=null){
 					map.remove(map.values());
 					//System.out.println(map.size());
 					String[] nuevaTabla = tablaForwardTextArea.getText().split("\n");
@@ -304,11 +301,12 @@ public class Mensajeria {
 						String[] nodos = linea.split(",");
 						map.put(nodos[0], nodos[1]);
 					}
-				}
+				}*/
 				for(String key: map.keySet()){
 					
 					String value = map.get(key);
-					System.out.println(key + ", " + value);
+					tablaForwardTextArea.setText(tablaForwardTextArea.getText()+ "" + key + ", " + value + "\n");
+					//System.out.println(key + ", " + value);
 				}
 			}
 		});
@@ -317,6 +315,15 @@ public class Mensajeria {
 		ingresoManualPanel.add(btnIngresarTabla);
 		
 		messagesQueue.add("From:Sophia\nTo:A\nMsg:hola que hace\nEOF");
+		messagesQueue.add("From:Ale\nTo:A\nMsg:hola que hace\nEOF");
+		messagesQueue.add("From:Cesar\nTo:A\nMsg:hola que hace\nEOF");
+		messagesQueue.add("From:Henzer\nTo:A\nMsg:hola que hace\nEOF");
+		messagesQueue.add("From:Oscar\nTo:A\nMsg:hola que hace\nEOF");
+		messagesQueue.add("From:Boris\nTo:A\nMsg:hola que hace\nEOF");
+		messagesQueue.add("From:Diego\nTo:A\nMsg:hola que hace\nEOF");
+		messagesQueue.add("From:Julio\nTo:A\nMsg:hola que hace\nEOF");
+		messagesQueue.add("From:Richie\nTo:A\nMsg:hola que hace\nEOF");
+		messagesQueue.add("From:Miguel\nTo:A\nMsg:hola que hace\nEOF");
 		while(!messagesQueue.isEmpty()){
 			messageReceived = messagesQueue.poll();
 			String[] extract = parseMessage(messageReceived);

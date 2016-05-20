@@ -13,8 +13,14 @@
   		<artifactId>Routing</artifactId>
   		<version>0.0.1-SNAPSHOT</version>
   	</dependency>
+  	
+  	<dependency>
+  		<groupId>redes</groupId>
+  		<artifactId>Forwarding</artifactId>
+  		<version>0.0.1-SNAPSHOT</version>
+  	</dependency>
   </dependencies>
-  
+
   <build>
   	<plugins>
   		<plugin>
