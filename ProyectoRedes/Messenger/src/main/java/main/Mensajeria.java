@@ -32,6 +32,9 @@ public class Mensajeria {
 	public String messageSent;
 	private String messageReceived;
 	public Queue<String> messagesQueue  = new LinkedList<String>();
+	ForwardingController fw = null;
+	
+	
 	
 	
 	public String getMessageSent() {
@@ -101,15 +104,20 @@ public class Mensajeria {
 				}
 			}
 		});
-//		Thread router = new Thread(new RouterController());
-//		router.start();
+		
+		
+
 	}
 
 	/**
 	 * Create the application.
 	 */
 	public Mensajeria() {
+		fw = new ForwardingController(1981, 4);
+		Thread forwarding = new Thread(fw);
+		forwarding.start();
 		initialize();
+		
 	}
 
 	/**
@@ -245,6 +253,7 @@ public class Mensajeria {
 				/*AQUI LE TENEMOS QUE PASAR mensajeEnviado 
 				 * A LA CLASE DE FORWARDING PARA QUE ESTA 
 				 * LO MANDE A QUIEN CORRESPONDA*/
+				
 			}
 		});
 		enviarPanel.add(btnEnviarMensaje);
