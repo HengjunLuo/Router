@@ -21,7 +21,6 @@ import network.Packet;
 import router.Node;
 import router.RouterController;
 import main.Utils;
-import static router.RouterController.nodes;
 
 public class ForwardingServer implements Runnable {
 	protected Socket clientSocket = null;
@@ -65,16 +64,22 @@ public class ForwardingServer implements Runnable {
 		connected = true;
 	}
 	
+	
+	
 	public String getThrougNode(String toHostname){
-		this.FinDestiny = nodes;
+		FinDestiny = RouterController.getForwardingTable();
 		String throughAux = FinDestiny.get(toHostname).getReachedThrough();
 		return throughAux;
 	}
+	
+	
+	
 	
 	public void run() {
 	
 		Utils.printLog(3, "Attending user requests:", TAG);
 		login();
+		
 		// Busamos en la tabla de checha y le mando el destiny
 		// lo cual nos va devolver un hostname ( through ) 
 		String finalDest = getThrougNode(destiny);
@@ -82,9 +87,10 @@ public class ForwardingServer implements Runnable {
 		// this.destiny = through que nos devuelve la tabla de checha
 					
 		
-		// this.message = message_local
+		
 		if(finalDest.equals(this.routerName)){
 			// Enviar a sofi
+			
 						
 		}
 		else{
@@ -97,7 +103,7 @@ public class ForwardingServer implements Runnable {
 			}
 		}
 		
-		
+		// 
 		
 		if(!queueMsg.isEmpty()){
 			
@@ -200,7 +206,7 @@ public class ForwardingServer implements Runnable {
 	
 	public void login() {
 		Utils.printLog(3, "Login process...", TAG);
-		String request, hostname = null;
+		String request= null;
 		String[] splitted;
 		
 		// No login for NULL connection.

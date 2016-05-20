@@ -17,7 +17,6 @@ import router.RouterController;
 import listenerForwarding.ForwarderMessage;
 import main.Utils;
 
-
 public final class ForwardingController implements Runnable{
 
 	protected ExecutorService threadPool = null;
